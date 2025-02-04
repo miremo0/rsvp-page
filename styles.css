@@ -1,0 +1,156 @@
+/* Attire Section Styles */
+.attire-section {
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 2rem auto;
+    max-width: 1200px;
+}
+
+.attire-section h2 {
+    color: #4A0012;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.attire-section ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 2rem;
+}
+
+.attire-section li {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.attire-section li::before {
+    content: "•";
+    color: #800020;
+    position: absolute;
+    left: 0;
+}
+
+/* Slideshow Styles */
+.attire-slideshow {
+    margin-top: 3rem;
+}
+
+.attire-slideshow h3 {
+    text-align: center;
+    color: #4A0012;
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 1.5rem;
+}
+
+.slideshow-container {
+    position: relative;
+    max-width: 800px;
+    margin: auto;
+}
+
+.slide {
+    display: none;
+    text-align: center;
+}
+
+.slide.active {
+    display: block;
+}
+
+.slide img {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    margin: auto;
+}
+
+.slide-caption {
+    text-align: center;
+    padding: 1rem;
+    color: #4A0012;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+}
+
+/* Navigation Arrows */
+.prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 1rem;
+    color: #800020;
+    font-weight: bold;
+    font-size: 1.5rem;
+    transition: 0.3s ease;
+    border-radius: 50%;
+    user-select: none;
+    background-color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+}
+
+.prev {
+    left: 0;
+}
+
+.next {
+    right: 0;
+}
+
+.prev:hover, .next:hover {
+    background-color: rgba(128, 0, 32, 0.8);
+    color: white;
+}
+
+/* Navigation Dots */
+.dots-container {
+    text-align: center;
+    padding: 1rem;
+}
+
+.dot {
+    cursor: pointer;
+    height: 12px;
+    width: 12px;
+    margin: 0 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+.dot.active, .dot:hover {
+    background-color: #800020;
+}
+
+/* Fade Animation */
+.fade {
+    animation-name: fade;
+    animation-duration: 1.5s;
+}
+
+@keyframes fade {
+    from {opacity: .4}
+    to {opacity: 1}
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .attire-section {
+        padding: 1rem;
+        margin: 1rem;
+    }
+
+    .prev, .next {
+        padding: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .slide img {
+        max-width: 300px;
+    }
+}

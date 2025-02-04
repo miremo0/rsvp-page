@@ -58,6 +58,56 @@ const guestList = [
 
 let selectedGuest = null;
 
+// Slideshow functionality
+let slideIndex = 1;
+
+// Initialize slideshow when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    showSlides(slideIndex);
+});
+
+// Change slide with prev/next buttons
+function changeSlide(n) {
+    showSlides(slideIndex += n);
+}
+
+// Change slide with dots
+function currentSlide(n) {
+    showSlides(slideIndex = n);
+}
+
+function showSlides(n) {
+    const slides = document.getElementsByClassName("slide");
+    const dots = document.getElementsByClassName("dot");
+    
+    // Handle wrapping around at the ends
+    if (n > slides.length) {
+        slideIndex = 1;
+    }
+    if (n < 1) {
+        slideIndex = slides.length;
+    }
+    
+    // Hide all slides
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";
+    }
+    
+    // Remove active class from all dots
+    for (let i = 0; i < dots.length; i++) {
+        dots[i].classList.remove("active");
+    }
+    
+    // Show the current slide and activate the corresponding dot
+    slides[slideIndex - 1].style.display = "block";
+    dots[slideIndex - 1].classList.add("active");
+}
+
+// Auto advance slides every 5 seconds
+setInterval(() => {
+    changeSlide(1);
+}, 5000);
+
 // Update page content with wedding details
 function updatePageContent() {
     const elements = {
@@ -621,24 +671,96 @@ function verifyGuestAccess() {
     const accessCode = urlParams.get('code');
 
     if (guestName && accessCode) {
-        const guestCodes = JSON.parse(localStorage.getItem('guestAccessCodes') || '{}');
-        const storedCode = guestCodes[guestName];
+        const nameInput = document.getElementById('verifyGuestName');
+        const codeInput = document.getElementById('verifyAccessCode');
+        const verifyBtn = document.getElementById('verifyAccess');
+        
+        if (nameInput && codeInput && verifyBtn) {
+            // Pre-fill the inputs
+            nameInput.value = decodeURIComponent(guestName);
+            codeInput.value = accessCode;
+            
+            // Automatically trigger verification
+            setTimeout(() => {
+                verifyBtn.click();
+            }, 100);
+        }
+    }
+}
 
-        if (storedCode === accessCode) {
+// Handle RSVP verification
+function setupRSVPVerification() {
+    const overlay = document.getElementById('accessCodeOverlay');
+    const content = document.getElementById('rsvpContent');
+    const verifyBtn = document.getElementById('verifyAccess');
+    const nameInput = document.getElementById('verifyGuestName');
+    const codeInput = document.getElementById('verifyAccessCode');
+    const errorDiv = document.getElementById('verifyError');
+
+    if (!overlay || !content || !verifyBtn || !nameInput || !codeInput) return;
+
+    const handleVerification = () => {
+        const name = nameInput.value.trim();
+        const code = codeInput.value.trim();
+
+        if (!name || !code) {
+            errorDiv.textContent = "Please enter both your name and access code.";
+            return;
+        }
+
+        // Get stored access codes
+        const guestCodes = JSON.parse(localStorage.getItem('guestAccessCodes') || '{}');
+        const storedCode = guestCodes[name];
+
+        if (storedCode && storedCode === code) {
+            // Valid access code
+            overlay.classList.add('hidden');
+            content.classList.remove('hidden');
+
             // Pre-fill and lock the guest name
-            const nameInput = document.getElementById('guestName');
-            if (nameInput) {
-                nameInput.value = guestName;
-                nameInput.readOnly = true;
+            const rsvpNameInput = document.getElementById('guestName');
+            if (rsvpNameInput) {
+                rsvpNameInput.value = name;
+                rsvpNameInput.readOnly = true;
                 
                 // Trigger guest details display
-                selectedGuest = guestList.find(g => g.name === guestName);
+                selectedGuest = guestList.find(g => g.name === name);
                 if (selectedGuest) {
                     displayGuestDetails(selectedGuest);
                 }
             }
+        } else {
+            errorDiv.textContent = "Invalid name or access code. Please try again.";
+            codeInput.value = "";
+            codeInput.focus();
         }
-    }
+    };
+
+    // Handle verify button click
+    verifyBtn.addEventListener('click', handleVerification);
+
+    // Handle enter key
+    nameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            codeInput.focus();
+        }
+    });
+
+    codeInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleVerification();
+        }
+    });
+
+    // Clear error on input change
+    [nameInput, codeInput].forEach(input => {
+        input.addEventListener('input', () => {
+            errorDiv.textContent = "";
+        });
+    });
+
+    // Check URL parameters immediately
+    verifyGuestAccess();
 }
 
 // Export RSVP status to file
@@ -749,93 +871,6 @@ function parseRSVPFile(content) {
     return guestStatuses;
 }
 
-// Handle RSVP verification
-function setupRSVPVerification() {
-    const overlay = document.getElementById('accessCodeOverlay');
-    const content = document.getElementById('rsvpContent');
-    const verifyBtn = document.getElementById('verifyAccess');
-    const nameInput = document.getElementById('verifyGuestName');
-    const codeInput = document.getElementById('verifyAccessCode');
-    const errorDiv = document.getElementById('verifyError');
-
-    if (!overlay || !content || !verifyBtn || !nameInput || !codeInput) return;
-
-    // Check if we have URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const guestName = urlParams.get('guest');
-    const accessCode = urlParams.get('code');
-
-    // If we have valid URL parameters, verify automatically
-    if (guestName && accessCode) {
-        verifyGuestAccess();
-        return;
-    }
-
-    // Show overlay for direct access
-    overlay.classList.remove('hidden');
-    content.classList.add('hidden');
-
-    const handleVerification = () => {
-        const name = nameInput.value.trim();
-        const code = codeInput.value.trim();
-
-        if (!name || !code) {
-            errorDiv.textContent = "Please enter both your name and access code.";
-            return;
-        }
-
-        // Get stored access codes
-        const guestCodes = JSON.parse(localStorage.getItem('guestAccessCodes') || '{}');
-        const storedCode = guestCodes[name];
-
-        if (storedCode && storedCode === code) {
-            // Valid access code
-            overlay.classList.add('hidden');
-            content.classList.remove('hidden');
-
-            // Pre-fill and lock the guest name
-            const rsvpNameInput = document.getElementById('guestName');
-            if (rsvpNameInput) {
-                rsvpNameInput.value = name;
-                rsvpNameInput.readOnly = true;
-                
-                // Trigger guest details display
-                selectedGuest = guestList.find(g => g.name === name);
-                if (selectedGuest) {
-                    displayGuestDetails(selectedGuest);
-                }
-            }
-        } else {
-            errorDiv.textContent = "Invalid name or access code. Please try again.";
-            codeInput.value = "";
-            codeInput.focus();
-        }
-    };
-
-    // Handle verify button click
-    verifyBtn.addEventListener('click', handleVerification);
-
-    // Handle enter key
-    nameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            codeInput.focus();
-        }
-    });
-
-    codeInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleVerification();
-        }
-    });
-
-    // Clear error on input change
-    [nameInput, codeInput].forEach(input => {
-        input.addEventListener('input', () => {
-            errorDiv.textContent = "";
-        });
-    });
-}
-
 // Initialize page functionality
 document.addEventListener('DOMContentLoaded', () => {
     updatePageContent();
@@ -845,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInvitationLinks();
     setupRSVPExportImport();
     setupRSVPVerification();
-    verifyGuestAccess();
     displayGuestList();
     createFallingLeaves();
+    showSlides(slideIndex); // Initialize slideshow
 }); 
