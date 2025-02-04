@@ -1,0 +1,128 @@
+/* Attire Slideshow Styles */
+.attire-slideshow {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(93, 64, 55, 0.1);
+}
+
+.attire-slideshow h3 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--color-orange);
+    font-family: 'Great Vibes', cursive;
+    font-size: 2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.slideshow-container {
+    max-width: 600px;
+    position: relative;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.slide {
+    display: none;
+    width: 100%;
+}
+
+.slide img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 15px 15px 0 0;
+}
+
+.slide-caption {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-brown);
+    font-weight: 600;
+    border-radius: 0 0 15px 15px;
+}
+
+.prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: auto;
+    padding: 1rem;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    transition: 0.3s ease;
+    border-radius: 50%;
+    user-select: none;
+    background: rgba(93, 64, 55, 0.6);
+    text-decoration: none;
+    line-height: 1;
+    height: 3rem;
+    width: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.next {
+    right: 1rem;
+}
+
+.prev {
+    left: 1rem;
+}
+
+.prev:hover, .next:hover {
+    background: var(--color-brown);
+}
+
+.slideshow-dots {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.dot {
+    cursor: pointer;
+    height: 12px;
+    width: 12px;
+    margin: 0 5px;
+    background-color: rgba(93, 64, 55, 0.3);
+    border-radius: 50%;
+    display: inline-block;
+    transition: 0.3s ease;
+}
+
+.dot.active, .dot:hover {
+    background-color: var(--color-brown);
+}
+
+.fade {
+    animation-name: fade;
+    animation-duration: 1s;
+}
+
+@keyframes fade {
+    from {opacity: 0.6}
+    to {opacity: 1}
+}
+
+@media (max-width: 768px) {
+    .slideshow-container {
+        max-width: 100%;
+    }
+
+    .slide img {
+        height: 300px;
+    }
+
+    .prev, .next {
+        padding: 0.8rem;
+        font-size: 1.2rem;
+        height: 2.5rem;
+        width: 2.5rem;
+    }
+} 

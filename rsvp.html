@@ -10,54 +10,100 @@
 <body>
     <div class="falling-leaves"></div>
     <div class="container">
-        <div class="card-container">
+        <div id="accessCodeOverlay" class="password-overlay">
+            <div class="password-container">
+                <h2>RSVP</h2>
+                <p>Please enter your name and access code to proceed with your RSVP</p>
+                <div class="password-form">
+                    <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
+                    <input type="text" id="verifyAccessCode" placeholder="Enter your access code" class="verify-input">
+                    <button id="verifyAccess" class="rsvp-button">
+                        Verify Access
+                        <span class="button-hover"></span>
+                    </button>
+                </div>
+                <div id="verifyError" class="password-error"></div>
+                <p class="note">Don't have an access code? Please contact the couple to receive your invitation link.</p>
+            </div>
+        </div>
+
+        <div id="rsvpContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="save-the-date">Join Us</h1>
-                <div class="message-card">
-                    <div class="message-content">
-                        As the autumn leaves dance in the gentle breeze, we invite you to be part of our special day
-                    </div>
-                </div>
+                <h1 class="page-title">RSVP</h1>
             </header>
 
-            <div id="accessCodeOverlay" class="password-overlay">
-                <div class="password-container">
-                    <h2>RSVP</h2>
-                    <p>Please enter your name and access code to proceed</p>
-                    <div class="password-form">
-                        <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
-                        <input type="text" id="verifyAccessCode" placeholder="Enter your access code" class="verify-input">
-                        <div class="rsvp-buttons">
-                            <button id="acceptRsvp" class="rsvp-button accept">
-                                Accept with Pleasure
-                                <span class="button-hover"></span>
-                            </button>
-                            <button id="declineRsvp" class="rsvp-button decline">
-                                Decline with Regret
-                                <span class="button-hover"></span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="verifyError" class="password-error"></div>
-                    <p class="note">Don't have an access code? Please contact the couple to receive your invitation link.</p>
+            <div class="rsvp-info-message">
+                <p class="seat-info">We have reserved one (1) seat in your honor</p>
+                <p class="deadline-info">Kindly respond by <span class="highlight-date">March 15, 2025</span></p>
+                <p class="contact-info">For inquiries: <a href="https://www.facebook.com/jaycel.escalera" target="_blank">Jaycel</a> | <a href="https://www.facebook.com/murphyjohn.ong" target="_blank">Murphy</a></p>
+            </div>
+
+            <div class="guest-details hidden">
+                <h3>Your Details</h3>
+                <div class="detail-item">
+                    <span class="detail-label">Role:</span>
+                    <span class="detail-value" id="guestRole"></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value" id="guestCategory"></span>
                 </div>
             </div>
 
-            <div id="rsvpContent" class="hidden">
-                <div class="rsvp-info-message">
-                    <p class="seat-info">We have reserved one (1) seat in your honor</p>
-                    <p class="deadline-info">Kindly respond by <span class="highlight-date">March 15, 2025</span></p>
-                    <p class="contact-info">For inquiries: <a href="https://www.facebook.com/jaycel.escalera" target="_blank">Jaycel</a> | <a href="https://www.facebook.com/murphyjohn.ong" target="_blank">Murphy</a></p>
-                </div>
-
-                <div id="responseMessage" class="response-message"></div>
+            <div class="rsvp-buttons hidden">
+                <button id="acceptRsvp" class="rsvp-button accept">
+                    Accept with Pleasure
+                    <span class="button-hover"></span>
+                </button>
+                <button id="declineRsvp" class="rsvp-button decline">
+                    Decline with Regret
+                    <span class="button-hover"></span>
+                </button>
             </div>
+
+            <div id="responseMessage" class="response-message"></div>
         </div>
     </div>
 
     <script>
+        // Create falling leaves animation
+        function createFallingLeaves() {
+            const leavesContainer = document.querySelector('.falling-leaves');
+            if (!leavesContainer) return;
+
+            // Clear any existing leaves
+            leavesContainer.innerHTML = '';
+
+            // Create leaves with varying properties
+            for (let i = 0; i < 15; i++) {
+                const leaf = document.createElement('div');
+                leaf.className = 'leaf';
+                
+                // Randomize starting position and animation
+                const startPosition = Math.random() * 100;
+                const animationDuration = Math.random() * 5 + 5; // 5-10 seconds
+                const animationDelay = Math.random() * 10;
+                const rotationDirection = Math.random() > 0.5 ? 1 : -1;
+                
+                // Apply styles
+                Object.assign(leaf.style, {
+                    left: `${startPosition}%`,
+                    animationDuration: `${animationDuration}s`,
+                    animationDelay: `${animationDelay}s`,
+                    transform: `rotate(${rotationDirection * 360}deg)`
+                });
+
+                // Add to container
+                leavesContainer.appendChild(leaf);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize falling leaves
+            createFallingLeaves();
+            setInterval(createFallingLeaves, 20000); // Recreate leaves every 20 seconds
+
             // Get URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const guestName = urlParams.get('guest');
@@ -72,29 +118,22 @@
                     nameInput.value = decodeURIComponent(guestName);
                     codeInput.value = decodeURIComponent(accessCode);
                     
-                    // Show the RSVP buttons directly
-                    document.querySelector('.rsvp-buttons').style.display = 'flex';
-                    document.querySelector('.verify-input').style.display = 'none';
-                    document.querySelector('.verify-input:last-of-type').style.display = 'none';
-                    document.querySelector('.password-container p').textContent = 'Please confirm your attendance';
+                    // Automatically verify the access
+                    document.getElementById('verifyAccess').click();
                 }
-            } else {
-                // If we don't have URL parameters, show the full verification form
-                document.getElementById('verifyGuestName').style.display = 'block';
-                document.getElementById('verifyAccessCode').style.display = 'block';
             }
 
-            // Add event listeners for RSVP buttons
+            // Add event listeners
+            document.getElementById('verifyAccess').addEventListener('click', verifyAccess);
             document.getElementById('acceptRsvp').addEventListener('click', function() {
                 handleRSVP('Attending');
             });
-
             document.getElementById('declineRsvp').addEventListener('click', function() {
                 handleRSVP('Not Attending');
             });
         });
 
-        async function handleRSVP(status) {
+        async function verifyAccess() {
             const guestName = document.getElementById('verifyGuestName').value;
             const accessCode = document.getElementById('verifyAccessCode').value;
 
@@ -104,7 +143,7 @@
             }
 
             try {
-                // First verify if the guest exists and the access code is correct
+                // Verify if the guest exists and the access code is correct
                 const response = await gapi.client.sheets.spreadsheets.values.get({
                     spreadsheetId: SHEET_ID,
                     range: 'Sheet1!A:E',
@@ -121,23 +160,33 @@
                     return;
                 }
 
-                // If verification successful, proceed with RSVP
+                // If verification successful, show RSVP content
                 document.getElementById('accessCodeOverlay').classList.add('hidden');
                 document.getElementById('rsvpContent').classList.remove('hidden');
-                
-                // Show appropriate message
-                const message = status === 'Attending' 
-                    ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
-                    : 'Thank you for letting us know. We will miss your presence at our celebration.';
-                
-                document.getElementById('responseMessage').innerHTML = `
-                    <div class="response-card">
-                        <h2>${status === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
-                        <p>${message}</p>
-                    </div>
-                `;
+                document.querySelector('.rsvp-buttons').classList.remove('hidden');
 
-                // Update the guest's RSVP status
+                // Display guest details
+                document.querySelector('.guest-details').classList.remove('hidden');
+                document.getElementById('guestRole').textContent = guestRow[1] || 'Guest';
+                document.getElementById('guestCategory').textContent = guestRow[2] || 'Guest';
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('verifyError').textContent = 'Error verifying access. Please try again.';
+            }
+        }
+
+        async function handleRSVP(status) {
+            const guestName = document.getElementById('verifyGuestName').value;
+            const accessCode = document.getElementById('verifyAccessCode').value;
+
+            try {
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SHEET_ID,
+                    range: 'Sheet1!A:E',
+                });
+
+                const rows = response.result.values;
                 const rowIndex = rows.findIndex(row => 
                     row[0].toLowerCase() === guestName.toLowerCase() && 
                     row[4] === accessCode
@@ -162,6 +211,22 @@
                         values: [[new Date().toLocaleString()]]
                     }
                 });
+
+                // Hide RSVP buttons
+                document.querySelector('.rsvp-buttons').classList.add('hidden');
+                
+                // Show appropriate message
+                const message = status === 'Attending' 
+                    ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
+                    : 'Thank you for letting us know. We will miss your presence at our celebration.';
+                
+                document.getElementById('responseMessage').innerHTML = `
+                    <div class="response-card">
+                        <h2>${status === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
+                        <p>${message}</p>
+                    </div>
+                `;
+                document.getElementById('responseMessage').style.display = 'block';
 
             } catch (error) {
                 console.error('Error:', error);

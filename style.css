@@ -1,8 +1,8 @@
 :root {
-    --color-brown: #8B4513;
+    --color-brown: #5D4037;
     --color-orange: #D84315;
     --color-gold: #FFB300;
-    --color-cream: #FFF9F5;
+    --color-cream: #FAFAFA;
     --color-text: #2D2D2D;
 }
 
@@ -745,9 +745,9 @@ footer {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.95);
+    width: 100%;
+    height: 100%;
+    background: rgba(250, 250, 250, 0.95);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -758,18 +758,17 @@ footer {
     background: white;
     padding: 3rem;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(93, 64, 55, 0.2);
-    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     max-width: 500px;
     width: 90%;
-    border: 1px solid rgba(93, 64, 55, 0.1);
+    text-align: center;
 }
 
 .password-container h2 {
     font-family: 'Great Vibes', cursive;
+    font-size: 3rem;
     color: var(--color-brown);
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -779,65 +778,65 @@ footer {
     font-size: 1.1rem;
 }
 
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
 .verify-input {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    border: 2px solid rgba(93, 64, 55, 0.2);
-    border-radius: 30px;
-    font-size: 1.1rem;
-    text-align: center;
-    transition: border-color 0.3s ease;
     width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--color-brown);
+    border-radius: 8px;
+    font-size: 1rem;
     font-family: 'Lora', serif;
+    background: rgba(255, 255, 255, 0.9);
+    transition: border-color 0.3s ease;
 }
 
 .verify-input:focus {
     outline: none;
-    border-color: var(--color-brown);
+    border-color: var(--color-orange);
 }
 
 .verify-input::placeholder {
-    color: rgba(93, 64, 55, 0.5);
+    color: #999;
 }
 
 .rsvp-buttons {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-top: 1.5rem;
+    margin: 2rem 0;
 }
 
 .rsvp-button {
-    display: inline-block;
-    padding: 1.2rem 4rem;
-    color: var(--color-cream);
-    text-decoration: none;
+    padding: 1rem 2rem;
+    border: none;
     border-radius: 30px;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
+    font-family: 'Lora', serif;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
-    border: none;
-    cursor: pointer;
-    font-family: 'Lora', serif;
-    letter-spacing: 2px;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(93, 64, 55, 0.3);
-    transition: all 0.3s ease;
-    text-align: center;
-    width: 100%;
+    background: linear-gradient(135deg, var(--color-brown), var(--color-orange));
+    color: white;
 }
 
 .rsvp-button.accept {
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    background: linear-gradient(135deg, #2E7D32, #388E3C);
 }
 
 .rsvp-button.decline {
-    background: linear-gradient(135deg, #9E9E9E, #616161);
+    background: linear-gradient(135deg, #757575, #9E9E9E);
 }
 
 .rsvp-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(93, 64, 55, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .button-hover {
@@ -846,12 +845,7 @@ footer {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        120deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent
-    );
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transition: 0.6s ease;
 }
 
@@ -860,69 +854,131 @@ footer {
 }
 
 .password-error {
-    color: #B71C1C;
+    color: #D32F2F;
     margin-top: 1rem;
     font-size: 0.9rem;
-    min-height: 20px;
-    text-align: center;
 }
 
 .note {
-    margin-top: 1.5rem;
+    color: #666;
     font-size: 0.9rem;
-    color: var(--color-text);
-    opacity: 0.8;
+    margin-top: 2rem;
     font-style: italic;
-    line-height: 1.4;
 }
 
 .response-card {
     background: white;
-    padding: 2rem;
+    padding: 3rem;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    margin: 2rem auto;
-    max-width: 500px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .response-card h2 {
     font-family: 'Great Vibes', cursive;
-    color: var(--color-brown);
     font-size: 2.5rem;
-    margin-bottom: 1rem;
+    color: var(--color-brown);
+    margin-bottom: 1.5rem;
 }
 
 .response-card p {
+    font-size: 1.1rem;
     color: var(--color-text);
     line-height: 1.6;
-    font-size: 1.1rem;
+}
+
+.rsvp-info-message {
+    text-align: center;
+    margin: 3rem auto;
+    max-width: 600px;
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.seat-info {
+    font-size: 1.2rem;
+    color: var(--color-brown);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.deadline-info {
+    margin-bottom: 1rem;
+}
+
+.highlight-date {
+    color: var(--color-orange);
+    font-weight: 600;
+}
+
+.contact-info {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.contact-info a {
+    color: var(--color-brown);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.contact-info a:hover {
+    color: var(--color-orange);
 }
 
 .hidden {
-    display: none !important;
+    display: none;
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
     .password-container {
         padding: 2rem;
+        width: 95%;
     }
 
     .password-container h2 {
+        font-size: 2.5rem;
+    }
+
+    .page-title {
+        font-size: 2.8rem;
+    }
+
+    .rsvp-info-message {
+        padding: 1.5rem;
+        margin: 2rem auto;
+    }
+
+    .response-card {
+        padding: 2rem;
+    }
+
+    .response-card h2 {
         font-size: 2rem;
     }
 
     .rsvp-buttons {
         gap: 0.8rem;
     }
-    
-    .response-card {
-        margin: 1.5rem;
-        padding: 1.5rem;
+
+    .rsvp-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
     }
-    
-    .response-card h2 {
-        font-size: 2rem;
+
+    .guest-details {
+        padding: 1.5rem;
+        margin: 1.5rem auto;
+    }
+
+    .guest-details h3 {
+        font-size: 1.8rem;
     }
 }
 
