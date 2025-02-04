@@ -12,15 +12,10 @@ let gisInited = false;
 // Initialize the Google API client
 function gapiLoaded() {
     console.log('🚀 gapiLoaded called');
-    try {
-        gapi.load('client', initializeGapiClient);
-        console.log('✅ gapi.load called successfully');
-    } catch (err) {
-        console.error('❌ Error in gapiLoaded:', err);
-        showError('Error loading Google API client. Please refresh the page.');
-    }
+    gapi.load('client', initializeGapiClient);
 }
 
+// Initialize the Google API client library
 async function initializeGapiClient() {
     console.log('🚀 initializeGapiClient called');
     try {
