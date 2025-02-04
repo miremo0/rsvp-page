@@ -434,14 +434,33 @@ Jaycel & Murphy`;
         // Function to copy text
         function copyText(elementId) {
             const element = document.getElementById(elementId);
-            element.select();
-            document.execCommand('copy');
             
-            const copyBtn = document.getElementById(`copy${elementId.charAt(0).toUpperCase() + elementId.slice(1)}Btn`);
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => {
-                copyBtn.textContent = 'Copy';
-            }, 2000);
+            // Handle both input and textarea elements
+            if (element.tagName.toLowerCase() === 'textarea') {
+                element.focus();
+                element.setSelectionRange(0, element.value.length);
+            } else {
+                element.select();
+            }
+            
+            try {
+                // Try the new clipboard API first
+                navigator.clipboard.writeText(element.value).then(() => {
+                    const copyBtn = document.getElementById(`copy${elementId.charAt(0).toUpperCase() + elementId.slice(1)}Btn`);
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = elementId === 'invitationMessage' ? 'Copy Message' : 'Copy Link';
+                    }, 2000);
+                });
+            } catch (err) {
+                // Fallback to the old method
+                document.execCommand('copy');
+                const copyBtn = document.getElementById(`copy${elementId.charAt(0).toUpperCase() + elementId.slice(1)}Btn`);
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = elementId === 'invitationMessage' ? 'Copy Message' : 'Copy Link';
+                }, 2000);
+            }
         }
 
         // Function to close modal
