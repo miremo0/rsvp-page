@@ -400,33 +400,44 @@
                 const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
                 const link = `${baseUrl}?guest=${encodeURIComponent(guest.name)}&code=${encodeURIComponent(finalAccessCode)}`;
                 
+                // Generate personalized message
+                const message = `Hi ${guest.name}, my ${guest.role}! 🍂
+
+You are cordially invited to celebrate our wedding day with us. Your presence would make our special day even more meaningful.
+
+Please use this link to RSVP:
+${link}
+
+Your access code is: ${finalAccessCode}
+
+We look forward to sharing this joyous occasion with you!
+
+With love,
+Jaycel & Murphy`;
+                
                 console.log('📨 Generated link:', link);
                 
                 // Update modal content and show it
                 document.getElementById('guestNameSpan').textContent = guest.name;
                 document.getElementById('invitationLink').value = link;
                 document.getElementById('accessCode').textContent = finalAccessCode;
+                document.getElementById('invitationMessage').value = message;
                 
                 const modal = document.getElementById('linkModal');
                 modal.style.display = 'block';
-                
-                // Focus and select the link for easy copying
-                const linkInput = document.getElementById('invitationLink');
-                linkInput.focus();
-                linkInput.select();
             } catch (error) {
                 console.error('❌ Error generating invitation link:', error);
                 alert('Error generating invitation link. Please try again.');
             }
         }
 
-        // Function to copy link
-        function copyLink() {
-            const linkInput = document.getElementById('invitationLink');
-            linkInput.select();
+        // Function to copy text
+        function copyText(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
             document.execCommand('copy');
             
-            const copyBtn = document.getElementById('copyLink');
+            const copyBtn = document.getElementById(`copy${elementId.charAt(0).toUpperCase() + elementId.slice(1)}Btn`);
             copyBtn.textContent = 'Copied!';
             setTimeout(() => {
                 copyBtn.textContent = 'Copy';
@@ -599,7 +610,7 @@
         // Make functions available globally
         window.loadGuestList = loadGuestList;
         window.generateInvitationLink = generateInvitationLink;
-        window.copyLink = copyLink;
+        window.copyText = copyText;
         window.closeModal = closeModal;
         window.updateGuestSides = updateGuestSides;
         window.editGuest = editGuest;
@@ -646,6 +657,8 @@
             
             const editModal = document.getElementById('editGuestModal');
             const form = document.getElementById('editGuestForm');
+            const modalTitle = document.getElementById('modalTitle');
+            const saveButton = document.getElementById('saveButton');
             
             // Get guest data
             const guestRef = ref(database, `guests/${guestId}`);
@@ -678,6 +691,14 @@
                     
                     // Store guest ID for saving
                     form.dataset.guestId = guestId;
+                    
+                    // Update modal title and button text
+                    modalTitle.textContent = 'Edit Guest';
+                    saveButton.textContent = 'Save Changes';
+                    
+                    // Set form submit handler for editing
+                    form.onsubmit = saveGuestChanges;
+                    
                     console.log('✅ Form populated successfully');
                     
                     // Show modal
@@ -959,7 +980,8 @@
                     name,
                     category,
                     role,
-                    side
+                    side,
+                    timestamp: new Date().toISOString()
                 });
                 
                 console.log('✅ Guest updated successfully');
@@ -1400,6 +1422,59 @@
             margin-top: 15px;
             font-style: italic;
         }
+
+        .message-container {
+            margin: 15px 0;
+        }
+
+        .message-container textarea {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            background: #f8f8f8;
+            font-family: 'Lora', serif;
+            margin-bottom: 10px;
+        }
+
+        .separator {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .separator::before,
+        .separator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background-color: #ddd;
+        }
+
+        .separator::before {
+            left: 0;
+        }
+
+        .separator::after {
+            right: 0;
+        }
+
+        .separator span {
+            background-color: white;
+            padding: 0 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .copy-btn {
+            width: 120px;
+        }
     </style>
 </head>
 <body>
@@ -1449,11 +1524,22 @@
                         <span class="close" onclick="closeModal()">&times;</span>
                         <h2>Invitation Link</h2>
                         <div class="invitation-details">
-                            <p>Share this link with <span id="guestNameSpan"></span>:</p>
+                            <p>Share this message with <span id="guestNameSpan"></span>:</p>
+                            
+                            <div class="message-container">
+                                <textarea id="invitationMessage" readonly></textarea>
+                                <button id="copyMessageBtn" class="copy-btn" onclick="copyText('invitationMessage')">Copy Message</button>
+                            </div>
+
+                            <div class="separator">
+                                <span>or copy link only</span>
+                            </div>
+                            
                             <div class="link-container">
                                 <input type="text" id="invitationLink" readonly>
-                                <button id="copyLink" class="copy-btn" onclick="copyLink()">Copy</button>
+                                <button id="copyLinkBtn" class="copy-btn" onclick="copyText('invitationLink')">Copy Link</button>
                             </div>
+                            
                             <div class="access-code">
                                 <p>Access Code: <span id="accessCode"></span></p>
                             </div>
