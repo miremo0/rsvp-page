@@ -181,15 +181,31 @@
             const guestName = urlParams.get('guest');
             const accessCode = urlParams.get('code');
             
-            // Only pre-fill the fields if URL parameters exist
+            // If URL parameters exist, try to verify guest immediately
             if (guestName && accessCode) {
-                const nameInput = document.getElementById('verifyGuestName');
-                const codeInput = document.getElementById('verifyAccessCode');
-                
-                if (nameInput && codeInput) {
-                    nameInput.value = decodeURIComponent(guestName);
-                    codeInput.value = decodeURIComponent(accessCode);
-                }
+                verifyGuestAccess(guestName, accessCode)
+                    .then(guest => {
+                        if (guest) {
+                            // If guest exists and has already RSVP'd, skip auth and show response
+                            if (guest.rsvpStatus && guest.rsvpStatus !== 'Pending') {
+                                document.getElementById('accessCodeOverlay').classList.add('hidden');
+                                document.getElementById('rsvpContent').classList.remove('hidden');
+                                handleVerificationResult(guest);
+                            } else {
+                                // If guest exists but hasn't RSVP'd, pre-fill the form
+                                const nameInput = document.getElementById('verifyGuestName');
+                                const codeInput = document.getElementById('verifyAccessCode');
+                                
+                                if (nameInput && codeInput) {
+                                    nameInput.value = decodeURIComponent(guestName);
+                                    codeInput.value = decodeURIComponent(accessCode);
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
             }
 
             // Add event listeners
