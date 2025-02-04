@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <defs>
+        <pattern id="woodPattern" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="#5D4037"/>
+            <path d="M0,0 Q50,20 100,0 M0,33 Q50,53 100,33 M0,66 Q50,86 100,66" stroke="#4E342E" stroke-width="2" fill="none"/>
+        </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#woodPattern)"/>
+    <rect width="100%" height="100%" fill="#FAFAFA" opacity="0.9"/>
+</svg> 

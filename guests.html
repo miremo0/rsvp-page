@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest List - Our Autumn Wedding</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="falling-leaves"></div>
+    <div class="container">
+        <div id="passwordOverlay" class="password-overlay">
+            <div class="password-container">
+                <h2>Private Guest List</h2>
+                <p>Please enter the password to view the guest list</p>
+                <div class="password-form">
+                    <input type="password" id="guestListPassword" placeholder="Enter password">
+                    <button id="submitPassword" class="rsvp-button">View Guest List</button>
+                </div>
+                <div id="passwordError" class="password-error"></div>
+            </div>
+        </div>
+
+        <div id="mainContent" class="hidden">
+            <header class="header">
+                <a href="index.html" class="back-home">← Back to Home</a>
+                <h1 class="page-title">Guest List</h1>
+            </header>
+
+            <main class="guest-list-container">
+                <div class="guest-list-header">
+                    <div class="status-legend">
+                        <span class="status-dot attending"></span> Attending
+                        <span class="status-dot pending"></span> Pending
+                    </div>
+                    <div class="guest-list-actions">
+                        <button id="exportRSVP" class="export-btn">
+                            Export RSVP Status
+                        </button>
+                        <button id="importRSVP" class="import-btn">
+                            Import RSVP Status
+                        </button>
+                        <input type="file" id="importFile" accept=".txt" style="display: none;">
+                    </div>
+                </div>
+
+                <div class="guest-categories" id="guestCategories">
+                    <!-- Categories will be populated by JavaScript -->
+                </div>
+
+                <div id="linkModal" class="modal hidden">
+                    <div class="modal-content">
+                        <span class="close-modal">&times;</span>
+                        <h2>Invitation Link</h2>
+                        <div class="invitation-details">
+                            <p>Share this link with <span id="guestNameSpan"></span>:</p>
+                            <div class="link-container">
+                                <input type="text" id="invitationLink" readonly>
+                                <button id="copyLink" class="copy-btn">Copy</button>
+                            </div>
+                            <div class="access-code">
+                                <p>Access Code: <span id="accessCode"></span></p>
+                            </div>
+                            <p class="note">Note: This link and code are unique to this guest and cannot be used by others.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer>
+                <p class="footer-note">Please RSVP to confirm your attendance</p>
+                <a href="rsvp.html" class="rsvp-link">RSVP Now</a>
+            </footer>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP - Our Autumn Wedding</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="falling-leaves"></div>
+    <div class="container">
+        <div id="accessCodeOverlay" class="password-overlay">
+            <div class="password-container">
+                <h2>RSVP Verification</h2>
+                <p>Please enter your name and access code to proceed with your RSVP</p>
+                <div class="password-form">
+                    <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
+                    <input type="text" id="verifyAccessCode" placeholder="Enter your access code" class="verify-input">
+                    <button id="verifyAccess" class="rsvp-button">Verify Access</button>
+                </div>
+                <div id="verifyError" class="password-error"></div>
+                <p class="note">Don't have an access code? Please contact the couple to receive your invitation link.</p>
+            </div>
+        </div>
+
+        <div id="rsvpContent" class="hidden">
+            <header class="header">
+                <a href="index.html" class="back-home">← Back to Home</a>
+                <h1 class="page-title">RSVP</h1>
+            </header>
+
+            <main>
+                <form id="rsvpForm" class="rsvp-form">
+                    <div class="form-group">
+                        <label for="guestName">Your Name:</label>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="guestName" required>
+                            <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div id="guestDetails" class="guest-details hidden">
+                        <h3>Your Details</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Role:</span>
+                            <span class="detail-value" id="guestRole"></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Category:</span>
+                            <span class="detail-value" id="guestCategory"></span>
+                        </div>
+                    </div>
+
+                    <div id="responseMessage" class="response-message"></div>
+
+                    <button type="submit" class="submit-rsvp">
+                        Confirm Attendance
+                        <span class="button-hover"></span>
+                    </button>
+                </form>
+            </main>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
