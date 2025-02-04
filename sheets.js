@@ -193,31 +193,96 @@ async function listGuests() {
     }
 }
 
-// Function to update RSVP status
-async function updateRSVP(row, status) {
+// Function to verify guest access for RSVP
+async function verifyGuestAccess(guestName, accessCode) {
+    console.log('🔍 Verifying access for:', guestName);
     try {
-        const response = await gapi.client.sheets.spreadsheets.values.update({
+        const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: `Sheet1!D${row}`, // Column D is RSVP Status
+            range: 'Sheet1!A:F',
+        });
+        
+        const values = response.result.values;
+        if (!values) {
+            console.warn('⚠️ No data found in sheet');
+            return null;
+        }
+
+        // Find the guest row (case-insensitive name match)
+        const guestRow = values.find(row => 
+            row[0]?.toLowerCase() === guestName?.toLowerCase() && 
+            row[4] === accessCode
+        );
+
+        if (!guestRow) {
+            console.warn('⚠️ Guest not found or invalid access code');
+            return null;
+        }
+
+        return {
+            name: guestRow[0],
+            role: guestRow[1] || '',
+            category: guestRow[2] || '',
+            rsvpStatus: guestRow[3] || 'Pending',
+            accessCode: guestRow[4]
+        };
+    } catch (error) {
+        console.error('❌ Error verifying guest:', error);
+        throw error;
+    }
+}
+
+// Function to update RSVP status
+async function updateRSVPStatus(guestName, accessCode, status) {
+    console.log('📝 Updating RSVP status for:', guestName);
+    try {
+        // First verify the guest
+        const guest = await verifyGuestAccess(guestName, accessCode);
+        if (!guest) {
+            throw new Error('Guest verification failed');
+        }
+
+        // Find the row number
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: 'Sheet1!A:F',
+        });
+
+        const values = response.result.values;
+        const rowIndex = values.findIndex(row => 
+            row[0]?.toLowerCase() === guestName?.toLowerCase() && 
+            row[4] === accessCode
+        );
+
+        if (rowIndex === -1) {
+            throw new Error('Guest row not found');
+        }
+
+        // Update RSVP status (Column D)
+        await gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: `Sheet1!D${rowIndex + 1}`,
             valueInputOption: 'RAW',
             resource: {
                 values: [[status]]
             }
         });
-        
-        // Update timestamp
+
+        // Update timestamp (Column F)
         await gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
-            range: `Sheet1!F${row}`, // Column F is Timestamp
+            range: `Sheet1!F${rowIndex + 1}`,
             valueInputOption: 'RAW',
             resource: {
-                values: [[new Date().toLocaleString()]]
+                values: [[new Date().toISOString()]]
             }
         });
-        
-        console.log('RSVP updated successfully');
-    } catch (err) {
-        console.error('Error updating RSVP:', err);
+
+        console.log('✅ RSVP status updated successfully');
+        return true;
+    } catch (error) {
+        console.error('❌ Error updating RSVP status:', error);
+        throw error;
     }
 }
 
