@@ -452,10 +452,127 @@ function displayGuestList(guests) {
             container.appendChild(guestsSection);
         }
 
+        // Add event listeners for generate link buttons after displaying the list
+        console.log('🔗 Adding event listeners to generate link buttons');
+        document.querySelectorAll('.generate-link-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const guestName = this.getAttribute('data-guest');
+                const guest = guests.find(g => g.name === guestName);
+                if (guest) {
+                    generateInvitationLink(guest);
+                }
+            });
+        });
+
         console.log('✅ Guest list display complete');
     } catch (err) {
         console.error('❌ Error displaying guest list:', err);
         showError('Error displaying guest list');
         container.innerHTML = '<div class="error-message">Error displaying guest list. Please try refreshing the page.</div>';
+    }
+}
+
+// Function to generate and display invitation link
+function generateInvitationLink(guest) {
+    console.log('🔗 Generating link for guest:', guest.name);
+    
+    try {
+        // Get the modal elements
+        const modal = document.getElementById('linkModal');
+        const guestNameSpan = document.getElementById('guestNameSpan');
+        const invitationLinkInput = document.getElementById('invitationLink');
+        const accessCodeSpan = document.getElementById('accessCode');
+        const closeBtn = modal.querySelector('.close-modal');
+        const copyBtn = document.getElementById('copyLink');
+
+        // Generate or use existing access code
+        let accessCode = guest.accessCode;
+        if (!accessCode) {
+            accessCode = generateAccessCode();
+            // Save the access code back to the sheet
+            saveAccessCode(guest.name, accessCode);
+        }
+
+        // Create the invitation link
+        const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
+        const invitationLink = `${baseUrl}?guest=${encodeURIComponent(guest.name)}`;
+
+        // Update modal content
+        guestNameSpan.textContent = guest.name;
+        invitationLinkInput.value = invitationLink;
+        accessCodeSpan.textContent = accessCode;
+
+        // Show the modal
+        modal.classList.remove('hidden');
+
+        // Add copy button functionality
+        copyBtn.addEventListener('click', function() {
+            invitationLinkInput.select();
+            document.execCommand('copy');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+                copyBtn.textContent = 'Copy';
+            }, 2000);
+        });
+
+        // Add close button functionality
+        closeBtn.addEventListener('click', function() {
+            modal.classList.add('hidden');
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        console.log('✅ Link generated successfully');
+    } catch (err) {
+        console.error('❌ Error generating link:', err);
+        showError('Error generating invitation link');
+    }
+}
+
+// Function to generate a random access code
+function generateAccessCode() {
+    const length = 6;
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+}
+
+// Function to save access code back to the sheet
+async function saveAccessCode(guestName, accessCode) {
+    console.log('💾 Saving access code for guest:', guestName);
+    try {
+        // Get the current values to find the guest's row
+        const response = await gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: 'Sheet1!A:E',
+        });
+
+        const rows = response.result.values;
+        const rowIndex = rows.findIndex(row => row[0] === guestName);
+
+        if (rowIndex !== -1) {
+            // Update the access code in column E
+            await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: SHEET_ID,
+                range: `Sheet1!E${rowIndex + 1}`,
+                valueInputOption: 'RAW',
+                resource: {
+                    values: [[accessCode]]
+                }
+            });
+            console.log('✅ Access code saved successfully');
+        } else {
+            console.error('❌ Guest not found in sheet');
+        }
+    } catch (err) {
+        console.error('❌ Error saving access code:', err);
     }
 } 

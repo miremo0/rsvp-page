@@ -1,10 +1,12 @@
 # Configuration files with sensitive information
 config.js
 
+
 # Environment files
 .env
 .env.local
 .env.*.local
+*.csv
 
 # IDE and editor files
 .vscode/
