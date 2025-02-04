@@ -11,47 +11,103 @@ let gisInited = false;
 
 // Initialize the Google API client
 function gapiLoaded() {
-    gapi.load('client', initializeGapiClient);
+    try {
+        gapi.load('client', initializeGapiClient);
+    } catch (err) {
+        showError('Error loading Google API client. Please refresh the page.');
+        console.error('Error in gapiLoaded:', err);
+    }
 }
 
 async function initializeGapiClient() {
-    await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: [DISCOVERY_DOC],
-    });
-    gapiInited = true;
-    maybeEnableButtons();
+    try {
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+    } catch (err) {
+        showError('Error initializing Google Sheets API. Please try again later.');
+        console.error('Error in initializeGapiClient:', err);
+    }
 }
 
 function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: '', // defined later
-    });
-    gisInited = true;
-    maybeEnableButtons();
+    try {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: '', // defined later
+            error_callback: (err) => {
+                showError('Authentication failed. Please make sure you are using an authorized email.');
+                console.error('Auth error:', err);
+            }
+        });
+        gisInited = true;
+        maybeEnableButtons();
+    } catch (err) {
+        showError('Error initializing authentication. Please try again later.');
+        console.error('Error in gisLoaded:', err);
+    }
+}
+
+function showError(message) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.textContent = message;
+        loadingIndicator.classList.remove('hidden');
+        loadingIndicator.style.color = '#B71C1C';
+    }
+    // Also show error in the auth button area
+    const authButton = document.getElementById('authButton');
+    if (authButton) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.color = '#B71C1C';
+        errorDiv.style.marginTop = '10px';
+        errorDiv.textContent = message;
+        authButton.appendChild(errorDiv);
+    }
 }
 
 function maybeEnableButtons() {
     if (gapiInited && gisInited) {
-        document.getElementById('authorize_button')?.classList.remove('hidden');
+        const authButton = document.getElementById('authButton');
+        if (authButton) {
+            authButton.classList.remove('hidden');
+        }
     }
 }
 
 // Handle the authorization flow
 async function handleAuthClick() {
-    tokenClient.callback = async (resp) => {
-        if (resp.error !== undefined) {
-            throw (resp);
-        }
-        await listGuests();
-    };
+    try {
+        document.getElementById('loadingIndicator').classList.remove('hidden');
+        document.getElementById('loadingIndicator').textContent = 'Connecting to Google Sheets...';
+        
+        tokenClient.callback = async (resp) => {
+            if (resp.error !== undefined) {
+                showError('Authentication failed. Please try again.');
+                console.error('Auth error:', resp);
+                return;
+            }
+            try {
+                await listGuests();
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            } catch (err) {
+                showError('Error loading guest list. Please try again.');
+                console.error('Error in callback:', err);
+            }
+        };
 
-    if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-        tokenClient.requestAccessToken({ prompt: '' });
+        if (gapi.client.getToken() === null) {
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+        } else {
+            tokenClient.requestAccessToken({ prompt: '' });
+        }
+    } catch (err) {
+        showError('Error during authentication. Please try again.');
+        console.error('Error in handleAuthClick:', err);
     }
 }
 
@@ -125,33 +181,142 @@ function processGuests(values) {
 function displayGuestList(guests) {
     const container = document.getElementById('guestCategories');
     if (!container) return;
+    container.innerHTML = ''; // Clear existing content
 
-    // Group guests by category
-    const categories = {};
-    guests.forEach(guest => {
-        if (!categories[guest.category]) {
-            categories[guest.category] = [];
-        }
-        categories[guest.category].push(guest);
-    });
+    // Create HTML for Family category
+    const familyGuests = guests.filter(guest => guest.category === 'Family');
+    const brideFamily = familyGuests.filter(guest => 
+        guest.role.toLowerCase().includes('bride') || 
+        guest.name.includes('Escalera')
+    );
+    const groomFamily = familyGuests.filter(guest => 
+        guest.role.toLowerCase().includes('groom') || 
+        guest.name.includes('Ong') || 
+        guest.name.includes('Olivar')
+    );
 
-    // Create HTML for each category
-    Object.entries(categories).forEach(([category, categoryGuests]) => {
-        const categorySection = document.createElement('div');
-        categorySection.className = 'guest-category';
-        categorySection.innerHTML = `
-            <h2>${category}</h2>
-            <div class="guest-list">
-                ${categoryGuests.map(guest => `
-                    <div class="guest-item ${(guest.rsvpStatus || 'Pending').toLowerCase()}">
-                        <span class="guest-name">${guest.name}</span>
-                        <span class="guest-role">${guest.role}</span>
-                        <span class="guest-status">${guest.rsvpStatus || 'Pending'}</span>
-                        ${guest.timestamp ? `<span class="guest-timestamp">Updated: ${guest.timestamp}</span>` : ''}
+    // Family Section
+    if (familyGuests.length > 0) {
+        const familySection = document.createElement('div');
+        familySection.className = 'guest-category family-category';
+        familySection.innerHTML = `
+            <h2 class="category-title">Family</h2>
+            <div class="family-columns">
+                <div class="family-column">
+                    <h3 class="family-subtitle">Bride's Family</h3>
+                    <div class="guest-grid">
+                        ${brideFamily.map(guest => createGuestCard(guest)).join('')}
                     </div>
-                `).join('')}
+                </div>
+                <div class="family-column">
+                    <h3 class="family-subtitle">Groom's Family</h3>
+                    <div class="guest-grid">
+                        ${groomFamily.map(guest => createGuestCard(guest)).join('')}
+                    </div>
+                </div>
             </div>
         `;
-        container.appendChild(categorySection);
-    });
+        container.appendChild(familySection);
+    }
+
+    // Principal Sponsors Section
+    const principalGuests = guests.filter(guest => guest.category === 'Principal');
+    if (principalGuests.length > 0) {
+        const ninang = principalGuests.filter(guest => guest.role.includes('Ninang'));
+        const ninong = principalGuests.filter(guest => guest.role.includes('Ninong'));
+
+        const principalSection = document.createElement('div');
+        principalSection.className = 'guest-category principal-category';
+        principalSection.innerHTML = `
+            <h2 class="category-title">Principal Sponsors</h2>
+            <div class="principal-columns">
+                <div class="principal-column">
+                    <h3 class="principal-subtitle">Ninang</h3>
+                    <div class="guest-grid">
+                        ${ninang.map(guest => createGuestCard(guest)).join('')}
+                    </div>
+                </div>
+                <div class="principal-column">
+                    <h3 class="principal-subtitle">Ninong</h3>
+                    <div class="guest-grid">
+                        ${ninong.map(guest => createGuestCard(guest)).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(principalSection);
+    }
+
+    // Entourage Section
+    const entourageGuests = guests.filter(guest => guest.category === 'Entourage');
+    if (entourageGuests.length > 0) {
+        const brideEntourage = entourageGuests.filter(guest => 
+            guest.role.includes('Maid') || 
+            guest.role.includes('Bridesmaid') || 
+            guest.role.includes('Bridesman')
+        );
+        const groomEntourage = entourageGuests.filter(guest => 
+            guest.role.includes('Best') || 
+            guest.role.includes('Groomsmen')
+        );
+
+        const entourageSection = document.createElement('div');
+        entourageSection.className = 'guest-category entourage-category';
+        entourageSection.innerHTML = `
+            <h2 class="category-title">Entourage</h2>
+            <div class="entourage-columns">
+                <div class="entourage-column">
+                    <h3 class="entourage-subtitle">Bride's Entourage</h3>
+                    <div class="guest-grid">
+                        ${brideEntourage.map(guest => createGuestCard(guest)).join('')}
+                    </div>
+                </div>
+                <div class="entourage-column">
+                    <h3 class="entourage-subtitle">Groom's Entourage</h3>
+                    <div class="guest-grid">
+                        ${groomEntourage.map(guest => createGuestCard(guest)).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(entourageSection);
+    }
+
+    // Guests Section
+    const regularGuests = guests.filter(guest => guest.category === 'Guest');
+    if (regularGuests.length > 0) {
+        const guestsSection = document.createElement('div');
+        guestsSection.className = 'guest-category';
+        guestsSection.innerHTML = `
+            <h2 class="category-title">Guests</h2>
+            <div class="guest-grid">
+                ${regularGuests.map(guest => createGuestCard(guest)).join('')}
+            </div>
+        `;
+        container.appendChild(guestsSection);
+    }
+}
+
+// Helper function to create guest card HTML
+function createGuestCard(guest) {
+    const statusClass = (guest.rsvpStatus || 'Pending').toLowerCase() === 'attending' 
+        ? 'status-attending' 
+        : 'status-pending';
+    
+    return `
+        <div class="guest-card">
+            <div class="guest-info">
+                <div class="guest-name">${guest.name}</div>
+                <div class="guest-role">${guest.role}</div>
+            </div>
+            <div class="guest-actions">
+                <div class="guest-status ${statusClass}">
+                    ${guest.rsvpStatus || 'Pending'}
+                </div>
+                <button class="generate-link-btn" data-guest="${guest.name}">
+                    Generate Link
+                </button>
+            </div>
+        </div>
+    `;
 } 
