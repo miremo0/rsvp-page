@@ -6,6 +6,9 @@
     <title>Guest List - Our Autumn Wedding</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script src="sheets.js"></script>
 </head>
 <body>
     <div class="falling-leaves"></div>
@@ -30,6 +33,7 @@
 
             <main class="guest-list-container">
                 <div class="guest-list-header">
+                    <button id="authorize_button" class="hidden" onclick="handleAuthClick()">Authorize Access</button>
                     <div class="status-legend">
                         <span class="status-dot attending"></span> Attending
                         <span class="status-dot pending"></span> Pending
@@ -37,7 +41,7 @@
                 </div>
 
                 <div class="guest-categories" id="guestCategories">
-                    <!-- Categories will be populated by JavaScript -->
+                    <!-- Will be populated by JavaScript -->
                 </div>
 
                 <div id="linkModal" class="modal hidden">
