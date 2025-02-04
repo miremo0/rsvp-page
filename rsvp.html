@@ -76,18 +76,26 @@
             const guestName = urlParams.get('guest');
             const accessCode = urlParams.get('code');
             
-            // If we have URL parameters, auto-fill the form
+            // If we have URL parameters, auto-fill the verification form
             if (guestName) {
-                const nameInput = document.getElementById('guestName');
+                const nameInput = document.getElementById('verifyGuestName');
                 if (nameInput) {
                     nameInput.value = decodeURIComponent(guestName);
                 }
             }
             
             if (accessCode) {
-                const codeInput = document.getElementById('accessCode');
+                const codeInput = document.getElementById('verifyAccessCode');
                 if (codeInput) {
                     codeInput.value = decodeURIComponent(accessCode);
+                }
+                
+                // Automatically trigger verification if both name and code are present
+                if (guestName && accessCode) {
+                    const verifyButton = document.getElementById('verifyAccess');
+                    if (verifyButton) {
+                        verifyButton.click(); // Automatically click the verify button
+                    }
                 }
             }
         });
