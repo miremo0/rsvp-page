@@ -77,10 +77,21 @@
         </div>
     </div>
     <script>
+        // Check for existing authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('isAuthenticated')) {
+                document.getElementById('passwordOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('authButton').classList.remove('hidden');
+            }
+        });
+
         // Modified password check to include Google Sheets authorization
         document.getElementById('submitPassword').addEventListener('click', async function() {
             const password = document.getElementById('guestListPassword').value;
             if (password === 'Morgan0929!') {  // Your existing password
+                // Store authentication state
+                sessionStorage.setItem('isAuthenticated', 'true');
                 document.getElementById('passwordOverlay').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
                 document.getElementById('authButton').classList.remove('hidden');
