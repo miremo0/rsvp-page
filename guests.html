@@ -60,9 +60,91 @@
             }
         }
 
+        // Function to update guest sides
+        async function updateGuestSides() {
+            try {
+                const guestsRef = ref(database, 'guests');
+                const snapshot = await get(guestsRef);
+                
+                if (snapshot.exists()) {
+                    const guests = snapshot.val();
+                    const updates = {};
+                    
+                    Object.entries(guests).forEach(([key, guest]) => {
+                        console.log(`Processing guest: ${guest.name}, Category: ${guest.category}, Role: ${guest.role}`);
+                        
+                        let side;
+                        const role = guest.role ? guest.role.toLowerCase() : '';
+                        
+                        // First check if the role contains explicit side indicators
+                        if (role.includes('brides')) {
+                            side = 'bride';
+                        } else if (role.includes('grooms')) {
+                            side = 'groom';
+                        } else if (role.startsWith('bride')) {
+                            side = 'bride';
+                        } else if (role.startsWith('groom')) {
+                            side = 'groom';
+                        }
+                        
+                        // If no side was determined by prefix, check category-specific rules
+                        if (!side) {
+                            if (guest.category === 'Principal') {
+                                if (role.includes('ninong')) {
+                                    side = 'groom';
+                                } else if (role.includes('ninang')) {
+                                    side = 'bride';
+                                }
+                            } else if (guest.category === 'Entourage') {
+                                if (role.includes('groomsmen') || 
+                                    role.includes('bestman') || 
+                                    role.includes('best man')) {
+                                    side = 'groom';
+                                } else if (role.includes('bridesmaid') || 
+                                         role.includes('maid of honor') || 
+                                         role.includes('matron of honor')) {
+                                    side = 'bride';
+                                }
+                            }
+                        }
+
+                        // If we determined a side, update it
+                        if (side) {
+                            console.log(`Setting ${guest.name} to ${side} side`);
+                            updates[`guests/${key}/side`] = side;
+                        }
+
+                        // Check if the category needs to be updated (e.g., Mary Grace Ong)
+                        if (guest.name === 'Mary Grace Ong' && guest.category !== 'Family') {
+                            updates[`guests/${key}/category`] = 'Family';
+                            console.log(`Updating ${guest.name}'s category to Family`);
+                        }
+                    });
+                    
+                    // Apply updates if there are any
+                    if (Object.keys(updates).length > 0) {
+                        console.log('Updates to be applied:', updates);
+                        await update(ref(database), updates);
+                        console.log('Guest sides and categories updated successfully');
+                        return true;
+                    } else {
+                        console.log('No updates needed');
+                    }
+                    return false;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error updating guest sides:', error);
+                return false;
+            }
+        }
+
         // Function to load and display guest list
         async function loadGuestList() {
             try {
+                // Update guest sides before loading the list
+                await updateGuestSides();
+                
                 const guestsRef = ref(database, 'guests');
                 onValue(guestsRef, (snapshot) => {
                     if (snapshot.exists()) {
@@ -85,46 +167,127 @@
             const guestCategories = document.getElementById('guestCategories');
             guestCategories.innerHTML = '';
 
-            // Group guests by category
+            // Group guests by category and side
             const categories = {};
             Object.values(guests).forEach(guest => {
                 const category = guest.category || 'Other';
                 if (!categories[category]) {
-                    categories[category] = [];
+                    categories[category] = {
+                        bride: [],
+                        groom: []
+                    };
                 }
-                categories[category].push(guest);
+                const side = guest.side || 'bride';
+                categories[category][side].push(guest);
+            });
+
+            // Sort function for roles
+            function getRolePriority(role) {
+                const roleLower = (role || '').toLowerCase();
+                // Entourage priorities
+                if (roleLower.includes('maid of honor')) return 1;
+                if (roleLower.includes('best man') || roleLower.includes('bestman')) return 1;
+                if (roleLower.includes('bridesmaid')) return 2;
+                if (roleLower.includes('groomsmen')) return 2;
+                // Family priorities
+                if (roleLower.includes('mother')) return 1;
+                if (roleLower.includes('father')) return 1;
+                if (roleLower.includes('brother')) return 2;
+                if (roleLower.includes('sister')) return 2;
+                if (roleLower.includes('cousin')) return 3;
+                // Guest priorities
+                if (roleLower.includes('friend')) return 1;
+                if (roleLower.includes('guest')) return 2;
+                return 99; // Default priority
+            }
+
+            // Sort guests within each category and side
+            Object.keys(categories).forEach(category => {
+                ['bride', 'groom'].forEach(side => {
+                    categories[category][side].sort((a, b) => {
+                        const priorityA = getRolePriority(a.role);
+                        const priorityB = getRolePriority(b.role);
+                        if (priorityA !== priorityB) {
+                            return priorityA - priorityB;
+                        }
+                        // If same priority, sort alphabetically by name
+                        return a.name.localeCompare(b.name);
+                    });
+                });
             });
 
             // Sort categories
             const sortedCategories = Object.keys(categories).sort((a, b) => {
-                const order = ['Family', 'Principal Sponsors', 'Secondary Sponsors', 'Entourage', 'Friends', 'Other'];
+                const order = ['Family', 'Principal', 'Entourage', 'Secondary Sponsors', 'Guest', 'Friends', 'Other'];
                 return order.indexOf(a) - order.indexOf(b);
             });
 
             // Create category sections
             sortedCategories.forEach(category => {
-                const categoryGuests = categories[category];
                 const categorySection = document.createElement('div');
                 categorySection.className = 'guest-category';
+
+                // Determine column titles based on category
+                let leftColumnTitle, rightColumnTitle;
+                switch(category) {
+                    case 'Principal':
+                        leftColumnTitle = 'Ninang';
+                        rightColumnTitle = 'Ninong';
+                        break;
+                    case 'Entourage':
+                        leftColumnTitle = 'Bridesmaid';
+                        rightColumnTitle = 'Groomsmen';
+                        break;
+                    default:
+                        leftColumnTitle = "Bride's Side";
+                        rightColumnTitle = "Groom's Side";
+                }
+
                 categorySection.innerHTML = `
                     <h2 class="category-title">${category}</h2>
-                    <div class="guest-grid">
-                        ${categoryGuests.map(guest => `
-                            <div class="guest-card">
-                                <div class="guest-info">
-                                    <div class="guest-name">${guest.name}</div>
-                                    <div class="guest-role">${guest.role || ''}</div>
-                                </div>
-                                <div class="guest-status ${guest.rsvpStatus === 'Attending' ? 'status-attending' : 'status-pending'}">
-                                    ${guest.rsvpStatus || 'Pending'}
-                                </div>
-                                <div class="guest-actions">
-                                    <button class="generate-link-btn" onclick="window.generateInvitationLink('${guest.name.replace(/'/g, "\\'")}', '${(guest.accessCode || '').replace(/'/g, "\\'")}').catch(error => console.error('Error:', error))">
-                                        Get Link
-                                    </button>
-                                </div>
+                    <div class="two-column-grid">
+                        <div class="column">
+                            <h3 class="side-title">${leftColumnTitle}</h3>
+                            <div class="guest-grid">
+                                ${categories[category].bride.map(guest => `
+                                    <div class="guest-card">
+                                        <div class="guest-info">
+                                            <div class="guest-name">${guest.name}</div>
+                                            <div class="guest-role">${guest.role || ''}</div>
+                                        </div>
+                                        <div class="guest-card-actions">
+                                            <div class="guest-status ${guest.rsvpStatus === 'Attending' ? 'status-attending' : 'status-pending'}">
+                                                ${guest.rsvpStatus || 'Pending'}
+                                            </div>
+                                            <button class="generate-link-btn" onclick="window.generateInvitationLink('${guest.name.replace(/'/g, "\\'")}', '${(guest.accessCode || '').replace(/'/g, "\\'")}').catch(error => console.error('Error:', error))">
+                                                Get Link
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
-                        `).join('')}
+                        </div>
+                        <div class="column">
+                            <h3 class="side-title">${rightColumnTitle}</h3>
+                            <div class="guest-grid">
+                                ${categories[category].groom.map(guest => `
+                                    <div class="guest-card">
+                                        <div class="guest-info">
+                                            <div class="guest-name">${guest.name}</div>
+                                            <div class="guest-role">${guest.role || ''}</div>
+                                        </div>
+                                        <div class="guest-card-actions">
+                                            <div class="guest-status ${guest.rsvpStatus === 'Attending' ? 'status-attending' : 'status-pending'}">
+                                                ${guest.rsvpStatus || 'Pending'}
+                                            </div>
+                                            <button class="generate-link-btn" onclick="window.generateInvitationLink('${guest.name.replace(/'/g, "\\'")}', '${(guest.accessCode || '').replace(/'/g, "\\'")}').catch(error => console.error('Error:', error))">
+                                                Get Link
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
                     </div>
                 `;
                 guestCategories.appendChild(categorySection);
@@ -270,6 +433,7 @@
         window.generateInvitationLink = generateInvitationLink;
         window.copyLink = copyLink;
         window.closeModal = closeModal;
+        window.updateGuestSides = updateGuestSides;
     </script>
 </head>
 <body>
@@ -290,7 +454,7 @@
         <div id="mainContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">Guest List fb9</h1>
+                <h1 class="page-title">Guest List</h1>
             </header>
 
             <main class="guest-list-container">
