@@ -6,13 +6,17 @@
     <title>RSVP - Our Autumn Wedding</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Load Google API scripts first -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="sheets.js"></script>
 </head>
 <body>
     <div class="falling-leaves"></div>
     <div class="container">
         <div id="accessCodeOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>RSVP 5</h2>
+                <h2>RSVP 6</h2>
                 <p>Please enter your name and access code to proceed with your RSVP</p>
                 <div class="password-form">
                     <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
@@ -66,11 +70,14 @@
         </div>
     </div>
     <script src="script.js"></script>
-    <script src="sheets.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             createFallingLeaves();
             setInterval(createFallingLeaves, 20000);
+
+            // Initialize Google API
+            gapiLoaded();
+            gisLoaded();
 
             // Get URL parameters
             const urlParams = new URLSearchParams(window.location.search);
@@ -84,9 +91,15 @@
                 if (nameInput && codeInput) {
                     nameInput.value = decodeURIComponent(guestName);
                     codeInput.value = decodeURIComponent(accessCode);
-                    verifyGuestAccess(guestName, accessCode)
-                        .then(handleVerificationResult)
-                        .catch(handleError);
+                    // Wait for API initialization before verifying
+                    const checkInit = setInterval(() => {
+                        if (gapiInited && gisInited) {
+                            clearInterval(checkInit);
+                            verifyGuestAccess(guestName, accessCode)
+                                .then(handleVerificationResult)
+                                .catch(handleError);
+                        }
+                    }, 100);
                 }
             }
 
