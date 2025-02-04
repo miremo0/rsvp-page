@@ -493,9 +493,9 @@ function generateInvitationLink(guest) {
             saveAccessCode(guest.name, accessCode);
         }
 
-        // Create the invitation link
+        // Create the invitation link with both name and access code
         const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
-        const invitationLink = `${baseUrl}?guest=${encodeURIComponent(guest.name)}`;
+        const invitationLink = `${baseUrl}?guest=${encodeURIComponent(guest.name)}&code=${encodeURIComponent(accessCode)}`;
 
         // Update modal content
         guestNameSpan.textContent = guest.name;
@@ -527,7 +527,7 @@ function generateInvitationLink(guest) {
             }
         });
 
-        console.log('✅ Link generated successfully');
+        console.log('✅ Link generated successfully with access code');
     } catch (err) {
         console.error('❌ Error generating link:', err);
         showError('Error generating invitation link');

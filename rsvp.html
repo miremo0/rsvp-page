@@ -69,5 +69,28 @@
         </div>
     </div>
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const guestName = urlParams.get('guest');
+            const accessCode = urlParams.get('code');
+            
+            // If we have URL parameters, auto-fill the form
+            if (guestName) {
+                const nameInput = document.getElementById('guestName');
+                if (nameInput) {
+                    nameInput.value = decodeURIComponent(guestName);
+                }
+            }
+            
+            if (accessCode) {
+                const codeInput = document.getElementById('accessCode');
+                if (codeInput) {
+                    codeInput.value = decodeURIComponent(accessCode);
+                }
+            }
+        });
+    </script>
 </body>
 </html> 
