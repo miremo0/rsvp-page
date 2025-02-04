@@ -1506,4 +1506,32 @@ footer {
     .reminders-section {
         padding: 1rem;
     }
+}
+
+.loading-indicator {
+    text-align: center;
+    padding: 1rem;
+    color: var(--color-brown);
+    font-style: italic;
+}
+
+.auth-button-container {
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.auth-button {
+    background: var(--color-brown);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.auth-button:hover {
+    background: #6d3610;
+    transform: translateY(-2px);
 } 

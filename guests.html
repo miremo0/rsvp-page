@@ -33,6 +33,14 @@
 
             <main class="guest-list-container">
                 <div class="guest-list-header">
+                    <div id="loadingIndicator" class="loading-indicator hidden">
+                        Loading guest list...
+                    </div>
+                    <div id="authButton" class="auth-button-container hidden">
+                        <button onclick="handleAuthClick()" class="auth-button">
+                            Connect to Guest List
+                        </button>
+                    </div>
                     <div class="status-legend">
                         <span class="status-dot attending"></span> Attending
                         <span class="status-dot pending"></span> Pending
@@ -75,8 +83,7 @@
             if (password === 'Morgan0929!') {  // Your existing password
                 document.getElementById('passwordOverlay').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
-                // Initialize Google Sheets after password verification
-                handleAuthClick();
+                document.getElementById('authButton').classList.remove('hidden');
             } else {
                 document.getElementById('passwordError').textContent = 'Incorrect password';
             }
