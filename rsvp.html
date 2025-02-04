@@ -67,113 +67,70 @@
     </div>
 
     <script>
-        // Create falling leaves animation
-        function createFallingLeaves() {
-            const leavesContainer = document.querySelector('.falling-leaves');
-            if (!leavesContainer) return;
-
-            // Clear any existing leaves
-            leavesContainer.innerHTML = '';
-
-            // Create leaves with varying properties
-            for (let i = 0; i < 15; i++) {
-                const leaf = document.createElement('div');
-                leaf.className = 'leaf';
-                
-                // Randomize starting position and animation
-                const startPosition = Math.random() * 100;
-                const animationDuration = Math.random() * 5 + 5; // 5-10 seconds
-                const animationDelay = Math.random() * 10;
-                const rotationDirection = Math.random() > 0.5 ? 1 : -1;
-                
-                // Apply styles
-                Object.assign(leaf.style, {
-                    left: `${startPosition}%`,
-                    animationDuration: `${animationDuration}s`,
-                    animationDelay: `${animationDelay}s`,
-                    transform: `rotate(${rotationDirection * 360}deg)`
-                });
-
-                // Add to container
-                leavesContainer.appendChild(leaf);
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize falling leaves
-            createFallingLeaves();
-            setInterval(createFallingLeaves, 20000); // Recreate leaves every 20 seconds
-
             // Get URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const guestName = urlParams.get('guest');
             const accessCode = urlParams.get('code');
             
             if (guestName && accessCode) {
-                // If we have both parameters, auto-fill and hide the form
                 const nameInput = document.getElementById('verifyGuestName');
                 const codeInput = document.getElementById('verifyAccessCode');
                 
                 if (nameInput && codeInput) {
                     nameInput.value = decodeURIComponent(guestName);
                     codeInput.value = decodeURIComponent(accessCode);
-                    
-                    // Automatically verify the access
-                    document.getElementById('verifyAccess').click();
+                    verifyGuestAccess(guestName, accessCode)
+                        .then(handleVerificationResult)
+                        .catch(handleError);
                 }
             }
 
             // Add event listeners
-            document.getElementById('verifyAccess').addEventListener('click', verifyAccess);
+            document.getElementById('verifyAccess').addEventListener('click', async function() {
+                const guestName = document.getElementById('verifyGuestName').value;
+                const accessCode = document.getElementById('verifyAccessCode').value;
+
+                if (!guestName || !accessCode) {
+                    document.getElementById('verifyError').textContent = 'Please enter both name and access code';
+                    return;
+                }
+
+                try {
+                    const guest = await verifyGuestAccess(guestName, accessCode);
+                    handleVerificationResult(guest);
+                } catch (error) {
+                    handleError(error);
+                }
+            });
+
             document.getElementById('acceptRsvp').addEventListener('click', function() {
                 handleRSVP('Attending');
             });
+
             document.getElementById('declineRsvp').addEventListener('click', function() {
                 handleRSVP('Not Attending');
             });
         });
 
-        async function verifyAccess() {
-            const guestName = document.getElementById('verifyGuestName').value;
-            const accessCode = document.getElementById('verifyAccessCode').value;
-
-            if (!guestName || !accessCode) {
-                document.getElementById('verifyError').textContent = 'Please enter both name and access code';
+        function handleVerificationResult(guest) {
+            if (!guest) {
+                document.getElementById('verifyError').textContent = 'Invalid name or access code. Please try again.';
                 return;
             }
 
-            try {
-                // Verify if the guest exists and the access code is correct
-                const response = await gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: SHEET_ID,
-                    range: 'Sheet1!A:E',
-                });
+            document.getElementById('accessCodeOverlay').classList.add('hidden');
+            document.getElementById('rsvpContent').classList.remove('hidden');
+            document.querySelector('.rsvp-buttons').classList.remove('hidden');
 
-                const rows = response.result.values;
-                const guestRow = rows.find(row => 
-                    row[0].toLowerCase() === guestName.toLowerCase() && 
-                    row[4] === accessCode
-                );
+            document.querySelector('.guest-details').classList.remove('hidden');
+            document.getElementById('guestRole').textContent = guest.role || 'Guest';
+            document.getElementById('guestCategory').textContent = guest.category || 'Guest';
+        }
 
-                if (!guestRow) {
-                    document.getElementById('verifyError').textContent = 'Invalid name or access code. Please try again.';
-                    return;
-                }
-
-                // If verification successful, show RSVP content
-                document.getElementById('accessCodeOverlay').classList.add('hidden');
-                document.getElementById('rsvpContent').classList.remove('hidden');
-                document.querySelector('.rsvp-buttons').classList.remove('hidden');
-
-                // Display guest details
-                document.querySelector('.guest-details').classList.remove('hidden');
-                document.getElementById('guestRole').textContent = guestRow[1] || 'Guest';
-                document.getElementById('guestCategory').textContent = guestRow[2] || 'Guest';
-
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('verifyError').textContent = 'Error verifying access. Please try again.';
-            }
+        function handleError(error) {
+            console.error('Error:', error);
+            document.getElementById('verifyError').textContent = 'Error verifying access. Please try again.';
         }
 
         async function handleRSVP(status) {
@@ -181,41 +138,10 @@
             const accessCode = document.getElementById('verifyAccessCode').value;
 
             try {
-                const response = await gapi.client.sheets.spreadsheets.values.get({
-                    spreadsheetId: SHEET_ID,
-                    range: 'Sheet1!A:E',
-                });
-
-                const rows = response.result.values;
-                const rowIndex = rows.findIndex(row => 
-                    row[0].toLowerCase() === guestName.toLowerCase() && 
-                    row[4] === accessCode
-                );
-
-                // Update RSVP status
-                await gapi.client.sheets.spreadsheets.values.update({
-                    spreadsheetId: SHEET_ID,
-                    range: `Sheet1!D${rowIndex + 1}`,
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [[status]]
-                    }
-                });
+                await updateRSVPStatus(guestName, accessCode, status);
                 
-                // Update timestamp
-                await gapi.client.sheets.spreadsheets.values.update({
-                    spreadsheetId: SHEET_ID,
-                    range: `Sheet1!F${rowIndex + 1}`,
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [[new Date().toLocaleString()]]
-                    }
-                });
-
-                // Hide RSVP buttons
                 document.querySelector('.rsvp-buttons').classList.add('hidden');
                 
-                // Show appropriate message
                 const message = status === 'Attending' 
                     ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
                     : 'Thank you for letting us know. We will miss your presence at our celebration.';
@@ -227,15 +153,13 @@
                     </div>
                 `;
                 document.getElementById('responseMessage').style.display = 'block';
-
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('verifyError').textContent = 'Error processing your RSVP. Please try again.';
             }
         }
     </script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script src="script.js"></script>
     <script src="sheets.js"></script>
 </body>
 </html> 

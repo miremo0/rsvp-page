@@ -1,9 +1,73 @@
 // Google Sheets API configuration
-const CLIENT_ID = '451907525747-8218iur9470jguk7vsgo461jfrssnvam.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyBXEyc_rQtTfLOOd-RHA9M3CXv1pON6OcI';
 const SHEET_ID = '1WDilDNoQXvt2jsj0M6rFeEQPp75vPc-aeB08_1Eub6s';
-const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+
+// Function to fetch guest data without authentication
+async function fetchGuestData() {
+    try {
+        const response = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:F?key=${API_KEY}`
+        );
+        const data = await response.json();
+        return data.values;
+    } catch (error) {
+        console.error('Error fetching guest data:', error);
+        throw error;
+    }
+}
+
+// Function to verify guest access
+async function verifyGuestAccess(guestName, accessCode) {
+    try {
+        const guestData = await fetchGuestData();
+        if (!guestData) return null;
+
+        const guestRow = guestData.find(row => 
+            row[0].toLowerCase() === guestName.toLowerCase() && 
+            row[4] === accessCode
+        );
+
+        if (!guestRow) return null;
+
+        return {
+            name: guestRow[0],
+            role: guestRow[1],
+            category: guestRow[2],
+            rsvpStatus: guestRow[3],
+            accessCode: guestRow[4]
+        };
+    } catch (error) {
+        console.error('Error verifying guest:', error);
+        throw error;
+    }
+}
+
+// Function to update RSVP status using Google Apps Script Web App
+async function updateRSVPStatus(guestName, accessCode, status) {
+    try {
+        // Replace this URL with your Google Apps Script Web App URL
+        const WEBAPP_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL';
+        
+        const response = await fetch(WEBAPP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                guestName: guestName,
+                accessCode: accessCode,
+                status: status,
+                timestamp: new Date().toLocaleString()
+            })
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error updating RSVP status:', error);
+        throw error;
+    }
+}
 
 let tokenClient;
 let gapiInited = false;
@@ -190,34 +254,6 @@ async function listGuests() {
             showError('Error loading guest list. Please try again.');
         }
         return false;
-    }
-}
-
-// Function to update RSVP status
-async function updateRSVP(row, status) {
-    try {
-        const response = await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `Sheet1!D${row}`, // Column D is RSVP Status
-            valueInputOption: 'RAW',
-            resource: {
-                values: [[status]]
-            }
-        });
-        
-        // Update timestamp
-        await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `Sheet1!F${row}`, // Column F is Timestamp
-            valueInputOption: 'RAW',
-            resource: {
-                values: [[new Date().toLocaleString()]]
-            }
-        });
-        
-        console.log('RSVP updated successfully');
-    } catch (err) {
-        console.error('Error updating RSVP:', err);
     }
 }
 
