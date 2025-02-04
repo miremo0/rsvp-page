@@ -33,7 +33,6 @@
 
             <main class="guest-list-container">
                 <div class="guest-list-header">
-                    <button id="authorize_button" class="hidden" onclick="handleAuthClick()">Authorize Access</button>
                     <div class="status-legend">
                         <span class="status-dot attending"></span> Attending
                         <span class="status-dot pending"></span> Pending
@@ -69,6 +68,26 @@
             </footer>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script>
+        // Modified password check to include Google Sheets authorization
+        document.getElementById('submitPassword').addEventListener('click', async function() {
+            const password = document.getElementById('guestListPassword').value;
+            if (password === 'Morgan0929!') {  // Your existing password
+                document.getElementById('passwordOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                // Initialize Google Sheets after password verification
+                handleAuthClick();
+            } else {
+                document.getElementById('passwordError').textContent = 'Incorrect password';
+            }
+        });
+
+        // Handle enter key
+        document.getElementById('guestListPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('submitPassword').click();
+            }
+        });
+    </script>
 </body>
 </html> 
