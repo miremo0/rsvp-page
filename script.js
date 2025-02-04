@@ -294,20 +294,18 @@ async function handleRSVP() {
             const saved = saveGuests(existingGuests);
             
             if (saved) {
-                showMessage('Thank you for accepting our invitation! We look forward to celebrating with you.', 'success');
+                showMessage('Thank you for accepting our invitation!', 'success');
                 form.reset();
                 document.getElementById('guestDetails').classList.add('hidden');
                 selectedGuest = null;
 
-                // If we're on the guest list page, update it immediately
-                if (document.getElementById('guestList')) {
-                    displayGuestList();
-                }
+                // Store the guest name in sessionStorage for the thank you page
+                sessionStorage.setItem('rsvpGuest', JSON.stringify(newGuest));
 
-                // After 2 seconds, redirect to guest list
+                // After 1 second, redirect to thank you page
                 setTimeout(() => {
-                    window.location.href = 'guests.html';
-                }, 2000);
+                    window.location.href = 'thankyou.html';
+                }, 1000);
             } else {
                 throw new Error('Failed to save RSVP');
             }
