@@ -231,25 +231,33 @@ async function updateRSVP(row, status) {
 // Process the guest list data
 function processGuests(values) {
     console.log('🚀 processGuests called with values:', values);
-    const guests = values.map(row => ({
-        name: row[0],        // Column A: Guest Name
-        role: row[1],        // Column B: Role
-        category: row[2],    // Column C: Category
-        rsvpStatus: row[3] || 'Pending',  // Column D: RSVP Status
-        accessCode: row[4],  // Column E: Access Code
-        timestamp: row[5]    // Column F: Timestamp
-    }));
-    
-    console.log('📋 Processed guests:', guests);
-    
-    // Store guests in localStorage for easy access
-    localStorage.setItem('guestList', JSON.stringify(guests));
-    console.log('💾 Guests stored in localStorage');
-    
-    // Update UI if on guest list page
-    if (window.location.pathname.includes('guests.html')) {
-        console.log('🎨 Updating UI with guest list');
-        displayGuestList(guests);
+    try {
+        const guests = values.map(row => {
+            console.log('Processing row:', row);
+            return {
+                name: row[0] || '',        // Column A: Guest Name
+                role: row[1] || '',        // Column B: Role
+                category: row[2] || '',    // Column C: Category
+                rsvpStatus: row[3] || 'Pending',  // Column D: RSVP Status
+                accessCode: row[4] || '',  // Column E: Access Code
+                timestamp: row[5] || ''    // Column F: Timestamp
+            };
+        });
+        
+        console.log('📋 Processed guests:', guests);
+        
+        // Store guests in localStorage for easy access
+        localStorage.setItem('guestList', JSON.stringify(guests));
+        console.log('💾 Guests stored in localStorage');
+        
+        // Update UI if on guest list page
+        if (window.location.pathname.includes('guests.html')) {
+            console.log('🎨 Updating UI with guest list');
+            displayGuestList(guests);
+        }
+    } catch (err) {
+        console.error('❌ Error processing guests:', err);
+        showError('Error processing guest list data');
     }
 }
 
@@ -262,123 +270,142 @@ function displayGuestList(guests) {
         return;
     }
     
-    console.log('🧹 Clearing existing content');
-    container.innerHTML = '';
+    try {
+        console.log('🧹 Clearing existing content');
+        container.innerHTML = '';
 
-    // Create HTML for Family category
-    const familyGuests = guests.filter(guest => guest.category === 'Family');
-    const brideFamily = familyGuests.filter(guest => 
-        guest.role.toLowerCase().includes('bride') || 
-        guest.name.includes('Escalera')
-    );
-    const groomFamily = familyGuests.filter(guest => 
-        guest.role.toLowerCase().includes('groom') || 
-        guest.name.includes('Ong') || 
-        guest.name.includes('Olivar')
-    );
-
-    // Family Section
-    if (familyGuests.length > 0) {
-        const familySection = document.createElement('div');
-        familySection.className = 'guest-category family-category';
-        familySection.innerHTML = `
-            <h2 class="category-title">Family</h2>
-            <div class="family-columns">
-                <div class="family-column">
-                    <h3 class="family-subtitle">Bride's Family</h3>
-                    <div class="guest-grid">
-                        ${brideFamily.map(guest => createGuestCard(guest)).join('')}
-                    </div>
-                </div>
-                <div class="family-column">
-                    <h3 class="family-subtitle">Groom's Family</h3>
-                    <div class="guest-grid">
-                        ${groomFamily.map(guest => createGuestCard(guest)).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(familySection);
-    }
-
-    // Principal Sponsors Section
-    const principalGuests = guests.filter(guest => guest.category === 'Principal');
-    if (principalGuests.length > 0) {
-        const ninang = principalGuests.filter(guest => guest.role.includes('Ninang'));
-        const ninong = principalGuests.filter(guest => guest.role.includes('Ninong'));
-
-        const principalSection = document.createElement('div');
-        principalSection.className = 'guest-category principal-category';
-        principalSection.innerHTML = `
-            <h2 class="category-title">Principal Sponsors</h2>
-            <div class="principal-columns">
-                <div class="principal-column">
-                    <h3 class="principal-subtitle">Ninang</h3>
-                    <div class="guest-grid">
-                        ${ninang.map(guest => createGuestCard(guest)).join('')}
-                    </div>
-                </div>
-                <div class="principal-column">
-                    <h3 class="principal-subtitle">Ninong</h3>
-                    <div class="guest-grid">
-                        ${ninong.map(guest => createGuestCard(guest)).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(principalSection);
-    }
-
-    // Entourage Section
-    const entourageGuests = guests.filter(guest => guest.category === 'Entourage');
-    if (entourageGuests.length > 0) {
-        const brideEntourage = entourageGuests.filter(guest => 
-            guest.role.includes('Maid') || 
-            guest.role.includes('Bridesmaid') || 
-            guest.role.includes('Bridesman')
+        // Create HTML for Family category
+        const familyGuests = guests.filter(guest => guest.category.toLowerCase() === 'family');
+        console.log('👨‍👩‍👧‍👦 Family guests:', familyGuests);
+        
+        const brideFamily = familyGuests.filter(guest => 
+            guest.role.toLowerCase().includes('bride') || 
+            guest.name.toLowerCase().includes('escalera')
         );
-        const groomEntourage = entourageGuests.filter(guest => 
-            guest.role.includes('Best') || 
-            guest.role.includes('Groomsmen')
+        console.log('👰 Bride family:', brideFamily);
+        
+        const groomFamily = familyGuests.filter(guest => 
+            guest.role.toLowerCase().includes('groom') || 
+            guest.name.toLowerCase().includes('ong') || 
+            guest.name.toLowerCase().includes('olivar')
         );
+        console.log('🤵 Groom family:', groomFamily);
 
-        const entourageSection = document.createElement('div');
-        entourageSection.className = 'guest-category entourage-category';
-        entourageSection.innerHTML = `
-            <h2 class="category-title">Entourage</h2>
-            <div class="entourage-columns">
-                <div class="entourage-column">
-                    <h3 class="entourage-subtitle">Bride's Entourage</h3>
-                    <div class="guest-grid">
-                        ${brideEntourage.map(guest => createGuestCard(guest)).join('')}
+        // Family Section
+        if (familyGuests.length > 0) {
+            console.log('Creating family section');
+            const familySection = document.createElement('div');
+            familySection.className = 'guest-category family-category';
+            familySection.innerHTML = `
+                <h2 class="category-title">Family</h2>
+                <div class="family-columns">
+                    <div class="family-column">
+                        <h3 class="family-subtitle">Bride's Family</h3>
+                        <div class="guest-grid">
+                            ${brideFamily.map(guest => createGuestCard(guest)).join('')}
+                        </div>
+                    </div>
+                    <div class="family-column">
+                        <h3 class="family-subtitle">Groom's Family</h3>
+                        <div class="guest-grid">
+                            ${groomFamily.map(guest => createGuestCard(guest)).join('')}
+                        </div>
                     </div>
                 </div>
-                <div class="entourage-column">
-                    <h3 class="entourage-subtitle">Groom's Entourage</h3>
-                    <div class="guest-grid">
-                        ${groomEntourage.map(guest => createGuestCard(guest)).join('')}
+            `;
+            container.appendChild(familySection);
+        }
+
+        // Principal Sponsors Section
+        const principalGuests = guests.filter(guest => guest.category.toLowerCase() === 'principal');
+        console.log('🎖️ Principal guests:', principalGuests);
+        
+        if (principalGuests.length > 0) {
+            const ninang = principalGuests.filter(guest => guest.role.toLowerCase().includes('ninang'));
+            const ninong = principalGuests.filter(guest => guest.role.toLowerCase().includes('ninong'));
+            console.log('Ninang:', ninang, 'Ninong:', ninong);
+
+            const principalSection = document.createElement('div');
+            principalSection.className = 'guest-category principal-category';
+            principalSection.innerHTML = `
+                <h2 class="category-title">Principal Sponsors</h2>
+                <div class="principal-columns">
+                    <div class="principal-column">
+                        <h3 class="principal-subtitle">Ninang</h3>
+                        <div class="guest-grid">
+                            ${ninang.map(guest => createGuestCard(guest)).join('')}
+                        </div>
+                    </div>
+                    <div class="principal-column">
+                        <h3 class="principal-subtitle">Ninong</h3>
+                        <div class="guest-grid">
+                            ${ninong.map(guest => createGuestCard(guest)).join('')}
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-        container.appendChild(entourageSection);
-    }
+            `;
+            container.appendChild(principalSection);
+        }
 
-    // Guests Section
-    const regularGuests = guests.filter(guest => guest.category === 'Guest');
-    if (regularGuests.length > 0) {
-        const guestsSection = document.createElement('div');
-        guestsSection.className = 'guest-category';
-        guestsSection.innerHTML = `
-            <h2 class="category-title">Guests</h2>
-            <div class="guest-grid">
-                ${regularGuests.map(guest => createGuestCard(guest)).join('')}
-            </div>
-        `;
-        container.appendChild(guestsSection);
-    }
+        // Entourage Section
+        const entourageGuests = guests.filter(guest => guest.category.toLowerCase() === 'entourage');
+        console.log('👥 Entourage guests:', entourageGuests);
+        
+        if (entourageGuests.length > 0) {
+            const brideEntourage = entourageGuests.filter(guest => 
+                guest.role.toLowerCase().includes('maid') || 
+                guest.role.toLowerCase().includes('bridesmaid') || 
+                guest.role.toLowerCase().includes('bridesman')
+            );
+            const groomEntourage = entourageGuests.filter(guest => 
+                guest.role.toLowerCase().includes('best') || 
+                guest.role.toLowerCase().includes('groomsmen')
+            );
+            console.log('Bride entourage:', brideEntourage, 'Groom entourage:', groomEntourage);
 
-    console.log('✅ Guest list display complete');
+            const entourageSection = document.createElement('div');
+            entourageSection.className = 'guest-category entourage-category';
+            entourageSection.innerHTML = `
+                <h2 class="category-title">Entourage</h2>
+                <div class="entourage-columns">
+                    <div class="entourage-column">
+                        <h3 class="entourage-subtitle">Bride's Entourage</h3>
+                        <div class="guest-grid">
+                            ${brideEntourage.map(guest => createGuestCard(guest)).join('')}
+                        </div>
+                    </div>
+                    <div class="entourage-column">
+                        <h3 class="entourage-subtitle">Groom's Entourage</h3>
+                        <div class="guest-grid">
+                            ${groomEntourage.map(guest => createGuestCard(guest)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(entourageSection);
+        }
+
+        // Guests Section
+        const regularGuests = guests.filter(guest => guest.category.toLowerCase() === 'guest');
+        console.log('👥 Regular guests:', regularGuests);
+        
+        if (regularGuests.length > 0) {
+            const guestsSection = document.createElement('div');
+            guestsSection.className = 'guest-category';
+            guestsSection.innerHTML = `
+                <h2 class="category-title">Guests</h2>
+                <div class="guest-grid">
+                    ${regularGuests.map(guest => createGuestCard(guest)).join('')}
+                </div>
+            `;
+            container.appendChild(guestsSection);
+        }
+
+        console.log('✅ Guest list display complete');
+    } catch (err) {
+        console.error('❌ Error displaying guest list:', err);
+        showError('Error displaying guest list');
+    }
 }
 
 // Helper function to create guest card HTML
