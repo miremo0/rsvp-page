@@ -1,0 +1,218 @@
+/* RSVP Page Specific Styles */
+:root {
+    --color-brown: #5D4037;
+    --color-orange: #D84315;
+    --color-gold: #FFB300;
+    --color-cream: #FAFAFA;
+    --color-text: #2D2D2D;
+}
+
+.password-overlay {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.password-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 3rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border: 1px solid rgba(93, 64, 55, 0.2);
+}
+
+.password-container h2 {
+    font-family: 'Great Vibes', cursive;
+    color: var(--color-brown);
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.password-container p {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.verify-input {
+    padding: 1rem;
+    border: 2px solid rgba(93, 64, 55, 0.2);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Lora', serif;
+    transition: border-color 0.3s ease;
+}
+
+.verify-input:focus {
+    outline: none;
+    border-color: var(--color-brown);
+}
+
+.back-home {
+    display: inline-block;
+    color: var(--color-brown);
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    transition: color 0.3s ease;
+}
+
+.back-home:hover {
+    color: var(--color-orange);
+}
+
+.page-title {
+    font-family: 'Great Vibes', cursive;
+    color: var(--color-brown);
+    font-size: 3.5rem;
+    text-align: center;
+    margin: 2rem 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rsvp-info-message {
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.seat-info {
+    font-family: 'Great Vibes', cursive;
+    color: var(--color-brown);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.highlight-date {
+    color: var(--color-orange);
+    font-weight: 600;
+}
+
+.guest-details {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    border: 1px solid rgba(93, 64, 55, 0.2);
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.guest-details h3 {
+    font-family: 'Great Vibes', cursive;
+    color: var(--color-brown);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(93, 64, 55, 0.1);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--color-brown);
+    font-weight: 600;
+}
+
+.detail-value {
+    color: var(--color-text);
+}
+
+.rsvp-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.rsvp-button {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-family: 'Lora', serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-width: 200px;
+}
+
+.rsvp-button.accept {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+    color: white;
+}
+
+.rsvp-button.decline {
+    background: linear-gradient(135deg, #9E9E9E, #757575);
+    color: white;
+}
+
+.rsvp-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.response-message {
+    max-width: 500px;
+    margin: 2rem auto;
+    text-align: center;
+}
+
+.response-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(93, 64, 55, 0.2);
+}
+
+.response-card h2 {
+    font-family: 'Great Vibes', cursive;
+    color: var(--color-orange);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.response-card p {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .password-container {
+        padding: 2rem;
+    }
+
+    .rsvp-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .rsvp-button {
+        width: 100%;
+        max-width: 300px;
+    }
+} 
