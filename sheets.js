@@ -29,12 +29,28 @@ async function initializeGapiClient() {
         maybeEnableButtons();
         
         // Check if we have a stored token
-        const storedToken = sessionStorage.getItem('gapi_token');
+        const storedToken = localStorage.getItem('gapi_token');
         if (storedToken) {
-            gapi.client.setToken(JSON.parse(storedToken));
-            // Hide auth button and load guests
-            document.getElementById('authButton')?.classList.add('hidden');
-            listGuests();
+            try {
+                gapi.client.setToken(JSON.parse(storedToken));
+                // Hide auth button
+                document.getElementById('authButton')?.classList.add('hidden');
+                // Show loading indicator
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) {
+                    loadingIndicator.textContent = 'Loading guest list...';
+                    loadingIndicator.classList.remove('hidden');
+                }
+                // Try to load guests
+                await listGuests();
+                // Hide loading indicator
+                loadingIndicator?.classList.add('hidden');
+            } catch (tokenErr) {
+                console.error('Error with stored token:', tokenErr);
+                localStorage.removeItem('gapi_token');
+                document.getElementById('authButton')?.classList.remove('hidden');
+                showError('Session expired. Please reconnect to the guest list.');
+            }
         }
     } catch (err) {
         showError('Error initializing Google Sheets API. Please try again later.');
@@ -51,6 +67,9 @@ function gisLoaded() {
             error_callback: (err) => {
                 showError('Authentication failed. Please make sure you are using an authorized email.');
                 console.error('Auth error:', err);
+                // Clear stored token on error
+                localStorage.removeItem('gapi_token');
+                document.getElementById('authButton')?.classList.remove('hidden');
             }
         });
         gisInited = true;
@@ -91,8 +110,9 @@ function maybeEnableButtons() {
 // Handle the authorization flow
 async function handleAuthClick() {
     try {
-        document.getElementById('loadingIndicator').classList.remove('hidden');
-        document.getElementById('loadingIndicator').textContent = 'Connecting to Google Sheets...';
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        loadingIndicator.classList.remove('hidden');
+        loadingIndicator.textContent = 'Connecting to Google Sheets...';
         
         tokenClient.callback = async (resp) => {
             if (resp.error !== undefined) {
@@ -101,15 +121,18 @@ async function handleAuthClick() {
                 return;
             }
             try {
-                // Store the token
-                sessionStorage.setItem('gapi_token', JSON.stringify(gapi.client.getToken()));
+                // Store the token in localStorage instead of sessionStorage
+                localStorage.setItem('gapi_token', JSON.stringify(gapi.client.getToken()));
                 // Hide auth button
                 document.getElementById('authButton').classList.add('hidden');
                 await listGuests();
-                document.getElementById('loadingIndicator').classList.add('hidden');
+                loadingIndicator.classList.add('hidden');
             } catch (err) {
                 showError('Error loading guest list. Please try again.');
                 console.error('Error in callback:', err);
+                // Clear stored token on error
+                localStorage.removeItem('gapi_token');
+                document.getElementById('authButton').classList.remove('hidden');
             }
         };
 
@@ -129,16 +152,28 @@ async function listGuests() {
     try {
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: 'Sheet1!A2:F', // Updated to include timestamp column
+            range: 'Sheet1!A2:F',
         });
+        
         const range = response.result;
         if (!range || !range.values || range.values.length == 0) {
-            console.log('No data found.');
+            showError('No data found in the sheet.');
             return;
         }
+        
         processGuests(range.values);
+        return true;
     } catch (err) {
-        console.error(err);
+        console.error('Error reading sheet:', err);
+        // If error is due to invalid credentials, clear token and show auth button
+        if (err.status === 401 || err.status === 403) {
+            localStorage.removeItem('gapi_token');
+            document.getElementById('authButton')?.classList.remove('hidden');
+            showError('Session expired. Please reconnect to the guest list.');
+        } else {
+            showError('Error loading guest list. Please try again.');
+        }
+        return false;
     }
 }
 
