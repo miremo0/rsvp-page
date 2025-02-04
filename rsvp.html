@@ -97,8 +97,24 @@
             }
 
             try {
-                // Verify guest and update RSVP status
-                // This will be handled by your Google Sheets integration
+                // First verify if the guest exists and the access code is correct
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SHEET_ID,
+                    range: 'Sheet1!A:E',
+                });
+
+                const rows = response.result.values;
+                const guestRow = rows.find(row => 
+                    row[0].toLowerCase() === guestName.toLowerCase() && 
+                    row[4] === accessCode
+                );
+
+                if (!guestRow) {
+                    document.getElementById('verifyError').textContent = 'Invalid name or access code. Please try again.';
+                    return;
+                }
+
+                // If verification successful, proceed with RSVP
                 document.getElementById('accessCodeOverlay').classList.add('hidden');
                 document.getElementById('rsvpContent').classList.remove('hidden');
                 
@@ -114,43 +130,34 @@
                     </div>
                 `;
 
-                // Update the Google Sheet with the RSVP status
-                try {
-                    // Find the guest in the sheet and update their status
-                    const response = await gapi.client.sheets.spreadsheets.values.get({
-                        spreadsheetId: SHEET_ID,
-                        range: 'Sheet1!A:E',
-                    });
+                // Update the guest's RSVP status
+                const rowIndex = rows.findIndex(row => 
+                    row[0].toLowerCase() === guestName.toLowerCase() && 
+                    row[4] === accessCode
+                );
 
-                    const rows = response.result.values;
-                    const rowIndex = rows.findIndex(row => 
-                        row[0] === guestName && row[4] === accessCode
-                    );
-
-                    if (rowIndex !== -1) {
-                        await gapi.client.sheets.spreadsheets.values.update({
-                            spreadsheetId: SHEET_ID,
-                            range: `Sheet1!D${rowIndex + 1}`,
-                            valueInputOption: 'RAW',
-                            resource: {
-                                values: [[status]]
-                            }
-                        });
-                        
-                        // Update timestamp
-                        await gapi.client.sheets.spreadsheets.values.update({
-                            spreadsheetId: SHEET_ID,
-                            range: `Sheet1!F${rowIndex + 1}`,
-                            valueInputOption: 'RAW',
-                            resource: {
-                                values: [[new Date().toLocaleString()]]
-                            }
-                        });
+                // Update RSVP status
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: SHEET_ID,
+                    range: `Sheet1!D${rowIndex + 1}`,
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [[status]]
                     }
-                } catch (err) {
-                    console.error('Error updating sheet:', err);
-                }
+                });
+                
+                // Update timestamp
+                await gapi.client.sheets.spreadsheets.values.update({
+                    spreadsheetId: SHEET_ID,
+                    range: `Sheet1!F${rowIndex + 1}`,
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [[new Date().toLocaleString()]]
+                    }
+                });
+
             } catch (error) {
+                console.error('Error:', error);
                 document.getElementById('verifyError').textContent = 'Error processing your RSVP. Please try again.';
             }
         }
