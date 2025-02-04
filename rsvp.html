@@ -6,17 +6,106 @@
     <title>RSVP - Our Autumn Wedding</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Load Google API scripts first -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
-    <script src="sheets.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getDatabase, ref, get, update, child } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-Owb-RYgi0khn4GW0qBxcZD2zc6cP6Gk",
+            authDomain: "mywed-5a5b9.firebaseapp.com",
+            databaseURL: "https://mywed-5a5b9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mywed-5a5b9",
+            storageBucket: "mywed-5a5b9.firebasestorage.app",
+            messagingSenderId: "537064292333",
+            appId: "1:537064292333:web:c18ee6c8cbc08cf2b931e4"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Function to verify guest access
+        async function verifyGuestAccess(guestName, accessCode) {
+            console.log('🔍 Verifying access for:', guestName);
+            try {
+                const guestsRef = ref(database, 'guests');
+                const snapshot = await get(guestsRef);
+                
+                if (snapshot.exists()) {
+                    const guests = snapshot.val();
+                    // Find guest by name (case-insensitive)
+                    const guest = Object.values(guests).find(g => 
+                        g.name.toLowerCase() === guestName.toLowerCase() && 
+                        g.accessCode === accessCode
+                    );
+
+                    if (!guest) {
+                        console.warn('⚠️ Guest not found or invalid access code');
+                        return null;
+                    }
+
+                    return guest;
+                }
+                
+                console.warn('⚠️ No data found in database');
+                return null;
+            } catch (error) {
+                console.error('❌ Error verifying guest:', error);
+                throw error;
+            }
+        }
+
+        // Function to update RSVP status
+        async function updateRSVPStatus(guestName, accessCode, status) {
+            console.log('📝 Updating RSVP status for:', guestName);
+            try {
+                // First verify the guest
+                const guest = await verifyGuestAccess(guestName, accessCode);
+                if (!guest) {
+                    throw new Error('Guest verification failed');
+                }
+
+                // Find guest key by searching through the database
+                const guestsRef = ref(database, 'guests');
+                const snapshot = await get(guestsRef);
+                const guests = snapshot.val();
+                const guestKey = Object.keys(guests).find(key => 
+                    guests[key].name.toLowerCase() === guestName.toLowerCase() && 
+                    guests[key].accessCode === accessCode
+                );
+
+                if (!guestKey) {
+                    throw new Error('Guest key not found');
+                }
+
+                // Update the RSVP status and timestamp
+                const updates = {};
+                updates[`guests/${guestKey}/rsvpStatus`] = status;
+                updates[`guests/${guestKey}/timestamp`] = new Date().toISOString();
+
+                await update(ref(database), updates);
+                console.log('✅ RSVP status updated successfully');
+                return true;
+            } catch (error) {
+                console.error('❌ Error updating RSVP status:', error);
+                throw error;
+            }
+        }
+
+        // Make functions available globally
+        window.verifyGuestAccess = verifyGuestAccess;
+        window.updateRSVPStatus = updateRSVPStatus;
+    </script>
 </head>
 <body>
     <div class="falling-leaves"></div>
     <div class="container">
         <div id="accessCodeOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>RSVP</h2>
+                <h2>RSVP fb1</h2>
                 <p>Please enter your name and access code to proceed with your RSVP</p>
                 <div class="password-form">
                     <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
@@ -75,10 +164,6 @@
             createFallingLeaves();
             setInterval(createFallingLeaves, 20000);
 
-            // Initialize Google API
-            gapiLoaded();
-            gisLoaded();
-
             // Get URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const guestName = urlParams.get('guest');
@@ -91,15 +176,10 @@
                 if (nameInput && codeInput) {
                     nameInput.value = decodeURIComponent(guestName);
                     codeInput.value = decodeURIComponent(accessCode);
-                    // Wait for API initialization before verifying
-                    const checkInit = setInterval(() => {
-                        if (gapiInited && gisInited) {
-                            clearInterval(checkInit);
-                            verifyGuestAccess(guestName, accessCode)
-                                .then(handleVerificationResult)
-                                .catch(handleError);
-                        }
-                    }, 100);
+                    // Verify access immediately
+                    verifyGuestAccess(guestName, accessCode)
+                        .then(handleVerificationResult)
+                        .catch(handleError);
                 }
             }
 
