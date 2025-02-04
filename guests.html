@@ -11,7 +11,6 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
         import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
-        import { createHash } from 'https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/+esm';
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -28,6 +27,14 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
+        // Function to hash password using Web Crypto API
+        async function hashPassword(password) {
+            const msgUint8 = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         // Function to verify admin password
         async function verifyAdminPassword(password) {
             try {
@@ -39,12 +46,10 @@
                     const hashedPasswordFromDB = snapshot.val();
                     
                     // Hash the input password
-                    const hasher = await createHash('sha-256');
-                    const hashedInput = await hasher.update(password);
-                    const hash = hasher.digest('hex');
+                    const hashedInput = await hashPassword(password);
                     
                     // Compare the hashes
-                    return hash === hashedPasswordFromDB;
+                    return hashedInput === hashedPasswordFromDB;
                 }
                 return false;
             } catch (error) {
@@ -169,6 +174,9 @@
         // Make functions available globally
         window.loadGuestList = loadGuestList;
         window.verifyAdminPassword = verifyAdminPassword;
+        window.generateInvitationLink = generateInvitationLink;
+        window.copyLink = copyLink;
+        window.closeModal = closeModal;
     </script>
 </head>
 <body>
@@ -189,7 +197,7 @@
         <div id="mainContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">Guest List fb5</h1>
+                <h1 class="page-title">Guest List fb6</h1>
             </header>
 
             <main class="guest-list-container">
@@ -271,43 +279,6 @@
                 document.getElementById('submitPassword').click();
             }
         });
-
-        // Function to generate invitation link
-        function generateInvitationLink(guestName, accessCode) {
-            const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
-            const link = `${baseUrl}?guest=${encodeURIComponent(guestName)}&code=${encodeURIComponent(accessCode)}`;
-            
-            document.getElementById('guestNameSpan').textContent = guestName;
-            document.getElementById('invitationLink').value = link;
-            document.getElementById('accessCode').textContent = accessCode;
-            document.getElementById('linkModal').classList.remove('hidden');
-        }
-
-        // Function to copy link
-        function copyLink() {
-            const linkInput = document.getElementById('invitationLink');
-            linkInput.select();
-            document.execCommand('copy');
-            
-            const copyBtn = document.getElementById('copyLink');
-            copyBtn.textContent = 'Copied!';
-            setTimeout(() => {
-                copyBtn.textContent = 'Copy';
-            }, 2000);
-        }
-
-        // Function to close modal
-        function closeModal() {
-            document.getElementById('linkModal').classList.add('hidden');
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('linkModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
     </script>
 </body>
 </html> 
