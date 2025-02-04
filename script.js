@@ -117,19 +117,26 @@ function updatePageContent() {
 
 // Slideshow functionality
 let slideIndex = 1;
+let slideInterval;
 
 // Change slide with prev/next buttons
 function changeSlide(n) {
-    showSlides(slideIndex += n);
+    if (document.getElementsByClassName("slide").length > 0) {
+        showSlides(slideIndex += n);
+    }
 }
 
 // Change slide with dots
 function currentSlide(n) {
-    showSlides(slideIndex = n);
+    if (document.getElementsByClassName("slide").length > 0) {
+        showSlides(slideIndex = n);
+    }
 }
 
 function showSlides(n) {
     const slides = document.getElementsByClassName("slide");
+    if (slides.length === 0) return; // Don't proceed if no slides exist
+    
     const dots = document.getElementsByClassName("dot");
     
     // Handle wrapping around at the ends
@@ -155,15 +162,18 @@ function showSlides(n) {
     dots[slideIndex - 1].classList.add("active");
 }
 
-// Auto advance slides every 5 seconds
-setInterval(() => {
-    changeSlide(1);
-}, 5000);
-
 // Initialize page functionality
 document.addEventListener('DOMContentLoaded', () => {
     updatePageContent();
     createFallingLeaves();
     setInterval(createFallingLeaves, 20000); // Recreate leaves every 20 seconds
-    showSlides(slideIndex); // Initialize slideshow
+    
+    // Only initialize slideshow if slides exist
+    if (document.getElementsByClassName("slide").length > 0) {
+        showSlides(slideIndex);
+        // Auto advance slides every 5 seconds
+        slideInterval = setInterval(() => {
+            changeSlide(1);
+        }, 5000);
+    }
 }); 
