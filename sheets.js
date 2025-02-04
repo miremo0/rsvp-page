@@ -26,6 +26,28 @@ async function initializeGapiClient() {
         console.log('✅ gapi.client initialized');
         gapiInited = true;
         maybeEnableButtons();
+
+        // Initialize token client for write access
+        if (!tokenClient) {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // Will be set later
+            });
+        }
+        
+        // Request write access token for RSVP functionality
+        if (window.location.pathname.includes('rsvp.html')) {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw resp;
+                }
+                console.log('✅ Write access token acquired');
+            };
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({ prompt: '' });
+            }
+        }
         
         // Check if we have a stored token
         const storedToken = localStorage.getItem('gapi_token');
@@ -37,30 +59,34 @@ async function initializeGapiClient() {
                 gapi.client.setToken(JSON.parse(storedToken));
                 console.log('✅ Token set successfully');
                 
-                // Hide auth button
-                document.getElementById('authButton')?.classList.add('hidden');
-                console.log('🔒 Auth button hidden');
-                
-                // Show loading indicator
-                const loadingIndicator = document.getElementById('loadingIndicator');
-                if (loadingIndicator) {
-                    loadingIndicator.textContent = 'Loading guest list...';
-                    loadingIndicator.classList.remove('hidden');
-                    console.log('⌛ Loading indicator shown');
+                // Hide auth button if on guests page
+                if (window.location.pathname.includes('guests.html')) {
+                    document.getElementById('authButton')?.classList.add('hidden');
+                    console.log('🔒 Auth button hidden');
+                    
+                    // Show loading indicator
+                    const loadingIndicator = document.getElementById('loadingIndicator');
+                    if (loadingIndicator) {
+                        loadingIndicator.textContent = 'Loading guest list...';
+                        loadingIndicator.classList.remove('hidden');
+                        console.log('⌛ Loading indicator shown');
+                    }
+                    
+                    // Try to load guests
+                    console.log('📋 Attempting to load guest list');
+                    const success = await listGuests();
+                    console.log('✅ listGuests result:', success);
+                    
+                    // Hide loading indicator
+                    loadingIndicator?.classList.add('hidden');
+                    console.log('✅ Loading complete');
                 }
-                
-                // Try to load guests
-                console.log('📋 Attempting to load guest list');
-                const success = await listGuests();
-                console.log('✅ listGuests result:', success);
-                
-                // Hide loading indicator
-                loadingIndicator?.classList.add('hidden');
-                console.log('✅ Loading complete');
             } catch (tokenErr) {
                 console.error('❌ Error with stored token:', tokenErr);
                 localStorage.removeItem('gapi_token');
-                document.getElementById('authButton')?.classList.remove('hidden');
+                if (window.location.pathname.includes('guests.html')) {
+                    document.getElementById('authButton')?.classList.remove('hidden');
+                }
                 showError('Session expired. Please reconnect to the guest list.');
             }
         }
@@ -197,12 +223,18 @@ async function listGuests() {
 async function verifyGuestAccess(guestName, accessCode) {
     console.log('🔍 Verifying access for:', guestName);
     try {
-        const response = await gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: SHEET_ID,
-            range: 'Sheet1!A:F',
-        });
+        // Use API key only for public access
+        const response = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:F?key=${API_KEY}`
+        );
         
-        const values = response.result.values;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const values = data.values;
+        
         if (!values) {
             console.warn('⚠️ No data found in sheet');
             return null;
@@ -242,13 +274,18 @@ async function updateRSVPStatus(guestName, accessCode, status) {
             throw new Error('Guest verification failed');
         }
 
-        // Find the row number
-        const response = await gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: SHEET_ID,
-            range: 'Sheet1!A:F',
-        });
-
-        const values = response.result.values;
+        // Get the current values to find the row number
+        const response = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A:F?key=${API_KEY}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const values = data.values;
+        
         const rowIndex = values.findIndex(row => 
             row[0]?.toLowerCase() === guestName?.toLowerCase() && 
             row[4] === accessCode
@@ -258,35 +295,25 @@ async function updateRSVPStatus(guestName, accessCode, status) {
             throw new Error('Guest row not found');
         }
 
-        // Update RSVP status (Column D)
-        const updateStatusResponse = await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `Sheet1!D${rowIndex + 1}`,
-            valueInputOption: 'USER_ENTERED',
-            resource: {
-                values: [[status]]
-            }
+        // Use Google Apps Script Web App URL for updates
+        const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxhpJ-STmG3KrVDN9q7wmeGE5yBBYPfMWBmKxFn9J_V0RdH8n0-aCTeavyUxqo-Fy4/exec';
+        
+        // Send update request to Web App
+        const updateResponse = await fetch(WEBAPP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                guestName: guestName,
+                accessCode: accessCode,
+                status: status,
+                timestamp: new Date().toLocaleString()
+            })
         });
 
-        if (updateStatusResponse.status !== 200) {
-            throw new Error('Failed to update RSVP status');
-        }
-
-        // Update timestamp (Column F)
-        const updateTimestampResponse = await gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: `Sheet1!F${rowIndex + 1}`,
-            valueInputOption: 'USER_ENTERED',
-            resource: {
-                values: [[new Date().toLocaleString()]]
-            }
-        });
-
-        if (updateTimestampResponse.status !== 200) {
-            throw new Error('Failed to update timestamp');
-        }
-
-        console.log('✅ RSVP status updated successfully');
+        console.log('✅ RSVP status update request sent');
         return true;
     } catch (error) {
         console.error('❌ Error updating RSVP status:', error);
