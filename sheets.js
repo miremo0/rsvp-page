@@ -27,6 +27,15 @@ async function initializeGapiClient() {
         });
         gapiInited = true;
         maybeEnableButtons();
+        
+        // Check if we have a stored token
+        const storedToken = sessionStorage.getItem('gapi_token');
+        if (storedToken) {
+            gapi.client.setToken(JSON.parse(storedToken));
+            // Hide auth button and load guests
+            document.getElementById('authButton')?.classList.add('hidden');
+            listGuests();
+        }
     } catch (err) {
         showError('Error initializing Google Sheets API. Please try again later.');
         console.error('Error in initializeGapiClient:', err);
@@ -73,7 +82,7 @@ function showError(message) {
 function maybeEnableButtons() {
     if (gapiInited && gisInited) {
         const authButton = document.getElementById('authButton');
-        if (authButton) {
+        if (authButton && !gapi.client.getToken()) {
             authButton.classList.remove('hidden');
         }
     }
@@ -92,6 +101,10 @@ async function handleAuthClick() {
                 return;
             }
             try {
+                // Store the token
+                sessionStorage.setItem('gapi_token', JSON.stringify(gapi.client.getToken()));
+                // Hide auth button
+                document.getElementById('authButton').classList.add('hidden');
                 await listGuests();
                 document.getElementById('loadingIndicator').classList.add('hidden');
             } catch (err) {
