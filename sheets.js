@@ -11,50 +11,67 @@ let gisInited = false;
 
 // Initialize the Google API client
 function gapiLoaded() {
+    console.log('🚀 gapiLoaded called');
     try {
         gapi.load('client', initializeGapiClient);
+        console.log('✅ gapi.load called successfully');
     } catch (err) {
+        console.error('❌ Error in gapiLoaded:', err);
         showError('Error loading Google API client. Please refresh the page.');
-        console.error('Error in gapiLoaded:', err);
     }
 }
 
 async function initializeGapiClient() {
+    console.log('🚀 initializeGapiClient called');
     try {
         await gapi.client.init({
             apiKey: API_KEY,
             discoveryDocs: [DISCOVERY_DOC],
         });
+        console.log('✅ gapi.client initialized');
         gapiInited = true;
         maybeEnableButtons();
         
         // Check if we have a stored token
         const storedToken = localStorage.getItem('gapi_token');
+        console.log('📝 Stored token exists:', !!storedToken);
+        
         if (storedToken) {
             try {
+                console.log('🔄 Attempting to set stored token');
                 gapi.client.setToken(JSON.parse(storedToken));
+                console.log('✅ Token set successfully');
+                
                 // Hide auth button
                 document.getElementById('authButton')?.classList.add('hidden');
+                console.log('🔒 Auth button hidden');
+                
                 // Show loading indicator
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) {
                     loadingIndicator.textContent = 'Loading guest list...';
                     loadingIndicator.classList.remove('hidden');
+                    console.log('⌛ Loading indicator shown');
                 }
+                
                 // Try to load guests
-                await listGuests();
+                console.log('📋 Attempting to load guest list');
+                const success = await listGuests();
+                console.log('✅ listGuests result:', success);
+                
                 // Hide loading indicator
                 loadingIndicator?.classList.add('hidden');
+                console.log('✅ Loading complete');
             } catch (tokenErr) {
-                console.error('Error with stored token:', tokenErr);
+                console.error('❌ Error with stored token:', tokenErr);
                 localStorage.removeItem('gapi_token');
                 document.getElementById('authButton')?.classList.remove('hidden');
                 showError('Session expired. Please reconnect to the guest list.');
             }
         }
     } catch (err) {
+        console.error('❌ Error in initializeGapiClient:', err);
         showError('Error initializing Google Sheets API. Please try again later.');
-        console.error('Error in initializeGapiClient:', err);
     }
 }
 
@@ -149,24 +166,30 @@ async function handleAuthClick() {
 
 // Function to read guests from the sheet
 async function listGuests() {
+    console.log('🚀 listGuests called');
     try {
+        console.log('📊 Fetching data from sheet:', SHEET_ID);
         const response = await gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
             range: 'Sheet1!A2:F',
         });
+        console.log('📝 Sheet response:', response);
         
         const range = response.result;
         if (!range || !range.values || range.values.length == 0) {
+            console.warn('⚠️ No data found in sheet');
             showError('No data found in the sheet.');
-            return;
+            return false;
         }
         
+        console.log('✅ Data found in sheet:', range.values);
         processGuests(range.values);
         return true;
     } catch (err) {
-        console.error('Error reading sheet:', err);
+        console.error('❌ Error reading sheet:', err);
         // If error is due to invalid credentials, clear token and show auth button
         if (err.status === 401 || err.status === 403) {
+            console.log('🔑 Authentication error, clearing token');
             localStorage.removeItem('gapi_token');
             document.getElementById('authButton')?.classList.remove('hidden');
             showError('Session expired. Please reconnect to the guest list.');
@@ -207,6 +230,7 @@ async function updateRSVP(row, status) {
 
 // Process the guest list data
 function processGuests(values) {
+    console.log('🚀 processGuests called with values:', values);
     const guests = values.map(row => ({
         name: row[0],        // Column A: Guest Name
         role: row[1],        // Column B: Role
@@ -216,20 +240,30 @@ function processGuests(values) {
         timestamp: row[5]    // Column F: Timestamp
     }));
     
+    console.log('📋 Processed guests:', guests);
+    
     // Store guests in localStorage for easy access
     localStorage.setItem('guestList', JSON.stringify(guests));
+    console.log('💾 Guests stored in localStorage');
     
     // Update UI if on guest list page
     if (window.location.pathname.includes('guests.html')) {
+        console.log('🎨 Updating UI with guest list');
         displayGuestList(guests);
     }
 }
 
 // Display guest list in the UI
 function displayGuestList(guests) {
+    console.log('🚀 displayGuestList called with guests:', guests);
     const container = document.getElementById('guestCategories');
-    if (!container) return;
-    container.innerHTML = ''; // Clear existing content
+    if (!container) {
+        console.error('❌ Container element not found');
+        return;
+    }
+    
+    console.log('🧹 Clearing existing content');
+    container.innerHTML = '';
 
     // Create HTML for Family category
     const familyGuests = guests.filter(guest => guest.category === 'Family');
@@ -343,6 +377,8 @@ function displayGuestList(guests) {
         `;
         container.appendChild(guestsSection);
     }
+
+    console.log('✅ Guest list display complete');
 }
 
 // Helper function to create guest card HTML
