@@ -63,7 +63,10 @@ let slideIndex = 1;
 
 // Initialize slideshow when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    showSlides(slideIndex);
+    // Only initialize slideshow if we have slides
+    if (document.getElementsByClassName("slide").length > 0) {
+        showSlides(slideIndex);
+    }
 });
 
 // Change slide with prev/next buttons
@@ -79,6 +82,9 @@ function currentSlide(n) {
 function showSlides(n) {
     const slides = document.getElementsByClassName("slide");
     const dots = document.getElementsByClassName("dot");
+    
+    // If no slides, return early
+    if (slides.length === 0) return;
     
     // Handle wrapping around at the ends
     if (n > slides.length) {
@@ -100,13 +106,17 @@ function showSlides(n) {
     
     // Show the current slide and activate the corresponding dot
     slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].classList.add("active");
+    if (dots.length > 0) {
+        dots[slideIndex - 1].classList.add("active");
+    }
 }
 
-// Auto advance slides every 5 seconds
-setInterval(() => {
-    changeSlide(1);
-}, 5000);
+// Auto advance slides every 5 seconds (only if slides exist)
+if (document.getElementsByClassName("slide").length > 0) {
+    setInterval(() => {
+        changeSlide(1);
+    }, 5000);
+}
 
 // Update page content with wedding details
 function updatePageContent() {
@@ -223,34 +233,22 @@ function highlightMatch(text, query) {
     return text.replace(regex, '<span class="highlight">$1</span>');
 }
 
-// Get guests from server
-async function getGuests() {
+// Get guests from localStorage
+function getGuests() {
     try {
-        const response = await fetch('rsvp-handler.php');
-        if (!response.ok) throw new Error('Failed to fetch RSVP data');
-        const data = await response.json();
-        return Array.isArray(data) ? data : [];
+        const storedGuests = localStorage.getItem('confirmedGuests');
+        return storedGuests ? JSON.parse(storedGuests) : [];
     } catch (error) {
-        console.error('Error fetching RSVP data:', error);
+        console.error('Error getting RSVP data:', error);
         return [];
     }
 }
 
-// Save guests to server
-async function saveGuests(guests) {
+// Save guests to localStorage
+function saveGuests(guests) {
     try {
-        const response = await fetch('rsvp-handler.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(guests)
-        });
-
-        if (!response.ok) throw new Error('Failed to save RSVP data');
-        
-        const result = await response.json();
-        return result.status === 'success';
+        localStorage.setItem('confirmedGuests', JSON.stringify(guests));
+        return true;
     } catch (error) {
         console.error('Error saving RSVP data:', error);
         return false;
@@ -263,7 +261,7 @@ async function handleRSVP() {
     const submitButton = form?.querySelector('.submit-rsvp');
     if (!form || !submitButton) return;
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
         
         if (!selectedGuest) {
@@ -277,7 +275,7 @@ async function handleRSVP() {
 
         try {
             // Get current guest list
-            const existingGuests = await getGuests();
+            const existingGuests = getGuests();
             
             // Check if guest has already RSVP'd
             if (existingGuests.some(guest => guest.name.toLowerCase() === selectedGuest.name.toLowerCase())) {
@@ -293,7 +291,7 @@ async function handleRSVP() {
             };
             
             existingGuests.push(newGuest);
-            const saved = await saveGuests(existingGuests);
+            const saved = saveGuests(existingGuests);
             
             if (saved) {
                 showMessage('Thank you for accepting our invitation! We look forward to celebrating with you.', 'success');
@@ -347,7 +345,7 @@ async function displayGuestList() {
     if (!categoriesContainer) return;
 
     try {
-        const confirmedGuests = await getGuests();
+        const confirmedGuests = getGuests();
         const categories = ['Family', 'Principal', 'Entourage', 'Guest'];
         
         // Create HTML for each category
@@ -569,12 +567,15 @@ function setupPasswordProtection() {
         return;
     }
 
+    // Simple password check - using base64 to slightly obscure the password
+    // The encoded password is 'Morgan0929!'
+    const encodedPass = 'TW9yZ2FuMDkyOSE=';
+        
     const handlePasswordSubmit = () => {
         const password = passwordInput.value.trim();
-        // You can change this password to whatever you want
-        const correctPassword = "Morgan0929!";
-
-        if (password === correctPassword) {
+        const encodedInput = btoa(password); // Convert input to base64
+            
+        if (encodedInput === encodedPass) {
             sessionStorage.setItem('guestListAuthenticated', 'true');
             passwordOverlay.classList.add('hidden');
             mainContent.classList.remove('hidden');
