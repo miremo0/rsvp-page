@@ -259,24 +259,32 @@ async function updateRSVPStatus(guestName, accessCode, status) {
         }
 
         // Update RSVP status (Column D)
-        await gapi.client.sheets.spreadsheets.values.update({
+        const updateStatusResponse = await gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
             range: `Sheet1!D${rowIndex + 1}`,
-            valueInputOption: 'RAW',
+            valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [[status]]
             }
         });
 
+        if (updateStatusResponse.status !== 200) {
+            throw new Error('Failed to update RSVP status');
+        }
+
         // Update timestamp (Column F)
-        await gapi.client.sheets.spreadsheets.values.update({
+        const updateTimestampResponse = await gapi.client.sheets.spreadsheets.values.update({
             spreadsheetId: SHEET_ID,
             range: `Sheet1!F${rowIndex + 1}`,
-            valueInputOption: 'RAW',
+            valueInputOption: 'USER_ENTERED',
             resource: {
-                values: [[new Date().toISOString()]]
+                values: [[new Date().toLocaleString()]]
             }
         });
+
+        if (updateTimestampResponse.status !== 200) {
+            throw new Error('Failed to update timestamp');
+        }
 
         console.log('✅ RSVP status updated successfully');
         return true;
