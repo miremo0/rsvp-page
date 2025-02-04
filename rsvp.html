@@ -12,12 +12,21 @@
     <div class="container">
         <div id="accessCodeOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>RSVP Verification</h2>
-                <p>Please enter your name and access code to proceed with your RSVP</p>
+                <h2>RSVP</h2>
+                <p>Please enter your name and access code to proceed</p>
                 <div class="password-form">
                     <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
                     <input type="text" id="verifyAccessCode" placeholder="Enter your access code" class="verify-input">
-                    <button id="verifyAccess" class="rsvp-button">Verify Access</button>
+                    <div class="rsvp-buttons">
+                        <button id="acceptRsvp" class="rsvp-button accept">
+                            Accept with Pleasure
+                            <span class="button-hover"></span>
+                        </button>
+                        <button id="declineRsvp" class="rsvp-button decline">
+                            Decline with Regret
+                            <span class="button-hover"></span>
+                        </button>
+                    </div>
                 </div>
                 <div id="verifyError" class="password-error"></div>
                 <p class="note">Don't have an access code? Please contact the couple to receive your invitation link.</p>
@@ -27,7 +36,7 @@
         <div id="rsvpContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">RSVP</h1>
+                <h1 class="page-title">Thank You</h1>
             </header>
 
             <div class="rsvp-info-message">
@@ -36,36 +45,7 @@
                 <p class="contact-info">For inquiries: <a href="https://www.facebook.com/jaycel.escalera" target="_blank">Jaycel</a> | <a href="https://www.facebook.com/murphyjohn.ong" target="_blank">Murphy</a></p>
             </div>
 
-            <main>
-                <form id="rsvpForm" class="rsvp-form">
-                    <div class="form-group">
-                        <label for="guestName">Your Name:</label>
-                        <div class="autocomplete-wrapper">
-                            <input type="text" id="guestName" required>
-                            <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none;"></div>
-                        </div>
-                    </div>
-
-                    <div id="guestDetails" class="guest-details hidden">
-                        <h3>Your Details</h3>
-                        <div class="detail-item">
-                            <span class="detail-label">Role:</span>
-                            <span class="detail-value" id="guestRole"></span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Category:</span>
-                            <span class="detail-value" id="guestCategory"></span>
-                        </div>
-                    </div>
-
-                    <div id="responseMessage" class="response-message"></div>
-
-                    <button type="submit" class="submit-rsvp">
-                        Confirm Attendance
-                        <span class="button-hover"></span>
-                    </button>
-                </form>
-            </main>
+            <div id="responseMessage" class="response-message"></div>
         </div>
     </div>
     <script src="script.js"></script>
@@ -76,29 +56,107 @@
             const guestName = urlParams.get('guest');
             const accessCode = urlParams.get('code');
             
-            // If we have URL parameters, auto-fill the verification form
-            if (guestName) {
+            if (guestName && accessCode) {
+                // If we have both parameters, auto-fill and hide the form
                 const nameInput = document.getElementById('verifyGuestName');
-                if (nameInput) {
-                    nameInput.value = decodeURIComponent(guestName);
-                }
-            }
-            
-            if (accessCode) {
                 const codeInput = document.getElementById('verifyAccessCode');
-                if (codeInput) {
-                    codeInput.value = decodeURIComponent(accessCode);
-                }
                 
-                // Automatically trigger verification if both name and code are present
-                if (guestName && accessCode) {
-                    const verifyButton = document.getElementById('verifyAccess');
-                    if (verifyButton) {
-                        verifyButton.click(); // Automatically click the verify button
-                    }
+                if (nameInput && codeInput) {
+                    nameInput.value = decodeURIComponent(guestName);
+                    codeInput.value = decodeURIComponent(accessCode);
+                    
+                    // Show the RSVP buttons directly
+                    document.querySelector('.rsvp-buttons').style.display = 'flex';
+                    document.querySelector('.verify-input').style.display = 'none';
+                    document.querySelector('.verify-input:last-of-type').style.display = 'none';
+                    document.querySelector('.password-container p').textContent = 'Please confirm your attendance';
                 }
+            } else {
+                // If we don't have URL parameters, show the full verification form
+                document.getElementById('verifyGuestName').style.display = 'block';
+                document.getElementById('verifyAccessCode').style.display = 'block';
             }
+
+            // Add event listeners for RSVP buttons
+            document.getElementById('acceptRsvp').addEventListener('click', function() {
+                handleRSVP('Attending');
+            });
+
+            document.getElementById('declineRsvp').addEventListener('click', function() {
+                handleRSVP('Not Attending');
+            });
         });
+
+        async function handleRSVP(status) {
+            const guestName = document.getElementById('verifyGuestName').value;
+            const accessCode = document.getElementById('verifyAccessCode').value;
+
+            if (!guestName || !accessCode) {
+                document.getElementById('verifyError').textContent = 'Please enter both name and access code';
+                return;
+            }
+
+            try {
+                // Verify guest and update RSVP status
+                // This will be handled by your Google Sheets integration
+                document.getElementById('accessCodeOverlay').classList.add('hidden');
+                document.getElementById('rsvpContent').classList.remove('hidden');
+                
+                // Show appropriate message
+                const message = status === 'Attending' 
+                    ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
+                    : 'Thank you for letting us know. We will miss your presence at our celebration.';
+                
+                document.getElementById('responseMessage').innerHTML = `
+                    <div class="response-card">
+                        <h2>${status === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
+                        <p>${message}</p>
+                    </div>
+                `;
+
+                // Update the Google Sheet with the RSVP status
+                try {
+                    // Find the guest in the sheet and update their status
+                    const response = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: SHEET_ID,
+                        range: 'Sheet1!A:E',
+                    });
+
+                    const rows = response.result.values;
+                    const rowIndex = rows.findIndex(row => 
+                        row[0] === guestName && row[4] === accessCode
+                    );
+
+                    if (rowIndex !== -1) {
+                        await gapi.client.sheets.spreadsheets.values.update({
+                            spreadsheetId: SHEET_ID,
+                            range: `Sheet1!D${rowIndex + 1}`,
+                            valueInputOption: 'RAW',
+                            resource: {
+                                values: [[status]]
+                            }
+                        });
+                        
+                        // Update timestamp
+                        await gapi.client.sheets.spreadsheets.values.update({
+                            spreadsheetId: SHEET_ID,
+                            range: `Sheet1!F${rowIndex + 1}`,
+                            valueInputOption: 'RAW',
+                            resource: {
+                                values: [[new Date().toLocaleString()]]
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error updating sheet:', err);
+                }
+            } catch (error) {
+                document.getElementById('verifyError').textContent = 'Error processing your RSVP. Please try again.';
+            }
+        }
     </script>
+    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+    <script src="sheets.js"></script>
 </body>
 </html> 

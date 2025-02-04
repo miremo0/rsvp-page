@@ -1534,4 +1534,58 @@ footer {
 .auth-button:hover {
     background: #6d3610;
     transform: translateY(-2px);
+}
+
+/* RSVP Button Styles */
+.rsvp-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.rsvp-button.accept {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+}
+
+.rsvp-button.decline {
+    background: linear-gradient(135deg, #9E9E9E, #616161);
+}
+
+.response-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin: 2rem auto;
+    max-width: 500px;
+}
+
+.response-card h2 {
+    font-family: 'Great Vibes', cursive;
+    color: var(--color-brown);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.response-card p {
+    color: var(--color-text);
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .rsvp-buttons {
+        gap: 0.8rem;
+    }
+    
+    .response-card {
+        margin: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .response-card h2 {
+        font-size: 2rem;
+    }
 } 
