@@ -147,6 +147,10 @@
             <div class="guest-details hidden rsvp-info-message">
                 <h3>Your Details</h3>
                 <div class="detail-item">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value" id="guestName"></span>
+                </div>
+                <div class="detail-item">
                     <span class="detail-label">Role:</span>
                     <span class="detail-value" id="guestRole"></span>
                 </div>
@@ -245,6 +249,7 @@
             document.getElementById('rsvpContent').classList.remove('hidden');
 
             document.querySelector('.guest-details').classList.remove('hidden');
+            document.getElementById('guestName').textContent = guest.name || 'Guest';
             document.getElementById('guestRole').textContent = guest.role || 'Guest';
             document.getElementById('guestCategory').textContent = guest.category || 'Guest';
 
