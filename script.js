@@ -71,8 +71,8 @@ function createFallingLeaves() {
         
         // Randomize starting position and animation
         const startPosition = Math.random() * 100;
-        const animationDuration = Math.random() * 5 + 5; // 5-10 seconds
-        const animationDelay = Math.random() * 10;
+        const animationDuration = Math.random() * 1 + 3; // 5-10 seconds
+        const animationDelay = Math.random() * 5;
         const rotationDirection = Math.random() > 0.5 ? 1 : -1;
         
         // Apply styles

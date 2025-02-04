@@ -111,7 +111,7 @@
             const accessCode = urlParams.get('code');
             
             if (guestName && accessCode) {
-                // If we have both parameters, auto-fill and hide the form
+                // If we have both parameters, auto-fill the form
                 const nameInput = document.getElementById('verifyGuestName');
                 const codeInput = document.getElementById('verifyAccessCode');
                 
@@ -119,8 +119,10 @@
                     nameInput.value = decodeURIComponent(guestName);
                     codeInput.value = decodeURIComponent(accessCode);
                     
-                    // Automatically verify the access
-                    document.getElementById('verifyAccess').click();
+                    // Wait a bit for the API to initialize before auto-verifying
+                    setTimeout(() => {
+                        document.getElementById('verifyAccess').click();
+                    }, 2000);
                 }
             }
 
@@ -144,6 +146,16 @@
             }
 
             try {
+                // Wait for gapi client to be initialized
+                if (!gapi.client?.sheets) {
+                    document.getElementById('verifyError').textContent = 'Please wait while we initialize the system...';
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+                    if (!gapi.client?.sheets) {
+                        document.getElementById('verifyError').textContent = 'System not ready. Please refresh the page and try again.';
+                        return;
+                    }
+                }
+
                 // Verify if the guest exists and the access code is correct
                 const response = await gapi.client.sheets.spreadsheets.values.get({
                     spreadsheetId: SHEET_ID,
