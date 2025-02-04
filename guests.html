@@ -47,6 +47,8 @@
                     
                     // Hash the input password
                     const hashedInput = await hashPassword(password);
+                    console.log('Input Hash:', hashedInput);
+                    console.log('DB Hash:', hashedPasswordFromDB);
                     
                     // Compare the hashes
                     return hashedInput === hashedPasswordFromDB;
@@ -117,7 +119,7 @@
                                     ${guest.rsvpStatus || 'Pending'}
                                 </div>
                                 <div class="guest-actions">
-                                    <button class="generate-link-btn" onclick="generateInvitationLink('${guest.name}', '${guest.accessCode}')">
+                                    <button class="generate-link-btn" onclick="window.generateInvitationLink('${guest.name}', '${guest.accessCode}')">
                                         Get Link
                                     </button>
                                 </div>
@@ -163,17 +165,61 @@
             document.getElementById('linkModal').classList.add('hidden');
         }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('linkModal');
-            if (event.target === modal) {
-                closeModal();
+        // Initialize event listeners when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for existing authentication
+            if (sessionStorage.getItem('isAuthenticated')) {
+                document.getElementById('passwordOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                loadGuestList();
             }
-        }
+
+            // Password check
+            document.getElementById('submitPassword').addEventListener('click', async function() {
+                const password = document.getElementById('guestListPassword').value;
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                const passwordError = document.getElementById('passwordError');
+                
+                try {
+                    loadingIndicator.classList.remove('hidden');
+                    passwordError.textContent = '';
+                    
+                    const isValid = await verifyAdminPassword(password);
+                    
+                    if (isValid) {
+                        sessionStorage.setItem('isAuthenticated', 'true');
+                        document.getElementById('passwordOverlay').classList.add('hidden');
+                        document.getElementById('mainContent').classList.remove('hidden');
+                        loadGuestList();
+                    } else {
+                        passwordError.textContent = 'Incorrect password';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    passwordError.textContent = 'Error verifying password. Please try again.';
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+
+            // Handle enter key
+            document.getElementById('guestListPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('submitPassword').click();
+                }
+            });
+
+            // Handle modal close when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('linkModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+        });
 
         // Make functions available globally
         window.loadGuestList = loadGuestList;
-        window.verifyAdminPassword = verifyAdminPassword;
         window.generateInvitationLink = generateInvitationLink;
         window.copyLink = copyLink;
         window.closeModal = closeModal;
@@ -197,7 +243,7 @@
         <div id="mainContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">Guest List fb6</h1>
+                <h1 class="page-title">Guest List fb7</h1>
             </header>
 
             <main class="guest-list-container">
@@ -235,50 +281,5 @@
             </main>
         </div>
     </div>
-    <script>
-        // Check for existing authentication on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (sessionStorage.getItem('isAuthenticated')) {
-                document.getElementById('passwordOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-                loadGuestList();
-            }
-        });
-
-        // Password check
-        document.getElementById('submitPassword').addEventListener('click', async function() {
-            const password = document.getElementById('guestListPassword').value;
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const passwordError = document.getElementById('passwordError');
-            
-            try {
-                loadingIndicator.classList.remove('hidden');
-                passwordError.textContent = '';
-                
-                const isValid = await verifyAdminPassword(password);
-                
-                if (isValid) {
-                    sessionStorage.setItem('isAuthenticated', 'true');
-                    document.getElementById('passwordOverlay').classList.add('hidden');
-                    document.getElementById('mainContent').classList.remove('hidden');
-                    loadGuestList();
-                } else {
-                    passwordError.textContent = 'Incorrect password';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                passwordError.textContent = 'Error verifying password. Please try again.';
-            } finally {
-                loadingIndicator.classList.add('hidden');
-            }
-        });
-
-        // Handle enter key
-        document.getElementById('guestListPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('submitPassword').click();
-            }
-        });
-    </script>
 </body>
 </html> 
