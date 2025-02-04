@@ -6,15 +6,15 @@
     <title>RSVP - Our Autumn Wedding</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </head>
 <body>
     <div class="falling-leaves"></div>
     <div class="container">
         <div id="accessCodeOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>RSVP</h2>
+                <h2>RSVP 2</h2>
                 <p>Please enter your name and access code to proceed with your RSVP</p>
                 <div class="password-form">
                     <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
@@ -70,7 +70,39 @@
 
     <script src="sheets.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        let gapiInited = false;
+        let gisInited = false;
+
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            try {
+                await gapi.client.init({
+                    apiKey: 'AIzaSyBXEyc_rQtTfLOOd-RHA9M3CXv1pON6OcI',
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+                });
+                gapiInited = true;
+                maybeInitialize();
+            } catch (err) {
+                console.error('Error initializing GAPI client:', err);
+                document.getElementById('verifyError').textContent = 'Error initializing. Please try again later.';
+            }
+        }
+
+        function gisLoaded() {
+            gisInited = true;
+            maybeInitialize();
+        }
+
+        function maybeInitialize() {
+            if (gapiInited && gisInited) {
+                initializeRSVP();
+            }
+        }
+
+        function initializeRSVP() {
             // Get URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const guestName = urlParams.get('guest');
@@ -114,7 +146,7 @@
             document.getElementById('declineRsvp').addEventListener('click', function() {
                 handleRSVP('Not Attending');
             });
-        });
+        }
 
         function handleVerificationResult(guest) {
             if (!guest) {
