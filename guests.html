@@ -119,7 +119,7 @@
                                     ${guest.rsvpStatus || 'Pending'}
                                 </div>
                                 <div class="guest-actions">
-                                    <button class="generate-link-btn" onclick="window.generateInvitationLink('${guest.name}', '${guest.accessCode}')">
+                                    <button class="generate-link-btn" onclick="window.generateInvitationLink('${guest.name.replace(/'/g, "\\'")}', '${(guest.accessCode || '').replace(/'/g, "\\'")}')">
                                         Get Link
                                     </button>
                                 </div>
@@ -138,6 +138,11 @@
 
         // Function to generate invitation link
         function generateInvitationLink(guestName, accessCode) {
+            if (!accessCode) {
+                alert('Error: This guest does not have an access code assigned.');
+                return;
+            }
+
             const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
             const link = `${baseUrl}?guest=${encodeURIComponent(guestName)}&code=${encodeURIComponent(accessCode)}`;
             
@@ -230,7 +235,7 @@
     <div class="container">
         <div id="passwordOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>Private Guest List fb7</h2>
+                <h2>Private Guest List</h2>
                 <p>Please enter the password to view the guest list</p>
                 <div class="password-form">
                     <input type="password" id="guestListPassword" placeholder="Enter password">
@@ -243,7 +248,7 @@
         <div id="mainContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">Guest List fb7</h1>
+                <h1 class="page-title">Guest List fb8</h1>
             </header>
 
             <main class="guest-list-container">
