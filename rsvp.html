@@ -123,7 +123,7 @@
         <div id="rsvpContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">RSVP</h1>
+                <h1 class="page-title">RSVP fb3</h1>
             </header>
 
             <div class="rsvp-info-message">
@@ -169,6 +169,7 @@
             const guestName = urlParams.get('guest');
             const accessCode = urlParams.get('code');
             
+            // Only pre-fill the fields if URL parameters exist
             if (guestName && accessCode) {
                 const nameInput = document.getElementById('verifyGuestName');
                 const codeInput = document.getElementById('verifyAccessCode');
@@ -176,10 +177,6 @@
                 if (nameInput && codeInput) {
                     nameInput.value = decodeURIComponent(guestName);
                     codeInput.value = decodeURIComponent(accessCode);
-                    // Verify access immediately
-                    verifyGuestAccess(guestName, accessCode)
-                        .then(handleVerificationResult)
-                        .catch(handleError);
                 }
             }
 
