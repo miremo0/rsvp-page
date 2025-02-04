@@ -119,61 +119,54 @@ function updatePageContent() {
 let slideIndex = 1;
 let slideInterval;
 
-// Change slide with prev/next buttons
-function changeSlide(n) {
-    if (document.getElementsByClassName("slide").length > 0) {
-        showSlides(slideIndex += n);
-    }
-}
-
-// Change slide with dots
-function currentSlide(n) {
-    if (document.getElementsByClassName("slide").length > 0) {
-        showSlides(slideIndex = n);
-    }
-}
-
 function showSlides(n) {
     const slides = document.getElementsByClassName("slide");
-    if (slides.length === 0) return; // Don't proceed if no slides exist
-    
     const dots = document.getElementsByClassName("dot");
     
-    // Handle wrapping around at the ends
-    if (n > slides.length) {
-        slideIndex = 1;
-    }
-    if (n < 1) {
-        slideIndex = slides.length;
-    }
-    
-    // Hide all slides
+    // If there are no slides on this page, return early
+    if (!slides.length) return;
+
+    if (n > slides.length) {slideIndex = 1}
+    if (n < 1) {slideIndex = slides.length}
+
     for (let i = 0; i < slides.length; i++) {
         slides[i].style.display = "none";
     }
-    
-    // Remove active class from all dots
     for (let i = 0; i < dots.length; i++) {
-        dots[i].classList.remove("active");
+        dots[i].className = dots[i].className.replace(" active", "");
     }
-    
-    // Show the current slide and activate the corresponding dot
-    slides[slideIndex - 1].style.display = "block";
-    dots[slideIndex - 1].classList.add("active");
+
+    slides[slideIndex-1].style.display = "block";
+    dots[slideIndex-1].className += " active";
 }
+
+function changeSlide(n) {
+    const slides = document.getElementsByClassName("slide");
+    if (!slides.length) return;
+    showSlides(slideIndex += n);
+}
+
+function currentSlide(n) {
+    const slides = document.getElementsByClassName("slide");
+    if (!slides.length) return;
+    showSlides(slideIndex = n);
+}
+
+// Initialize slideshow if slides are present
+document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.getElementsByClassName("slide");
+    if (slides.length) {
+        showSlides(slideIndex);
+        // Auto advance slides every 5 seconds
+        slideInterval = setInterval(function() {
+            changeSlide(1);
+        }, 5000);
+    }
+});
 
 // Initialize page functionality
 document.addEventListener('DOMContentLoaded', () => {
     updatePageContent();
     createFallingLeaves();
     setInterval(createFallingLeaves, 20000); // Recreate leaves every 20 seconds
-    
-    // Only initialize slideshow if slides exist
-    if (document.getElementsByClassName("slide").length > 0) {
-        showSlides(slideIndex);
-        // Auto advance slides every 5 seconds
-        slideInterval = setInterval(() => {
-            changeSlide(1);
-        }, 5000);
-    }
 }); 
