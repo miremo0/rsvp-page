@@ -138,12 +138,13 @@
             </header>
 
             <div class="rsvp-info-message">
+                <h3>Important Information</h3>
                 <p class="seat-info">We have reserved one (1) seat in your honor</p>
                 <p class="deadline-info">Kindly respond by <span class="highlight-date">April 8, 2025</span></p>
                 <p class="contact-info">For inquiries: <a href="https://www.facebook.com/jaycel.escalera.9" target="_blank">Jaycel</a> | <a href="https://www.facebook.com/ImMiremo/" target="_blank">Murphy</a></p>
             </div>
 
-            <div class="guest-details hidden">
+            <div class="guest-details hidden rsvp-info-message">
                 <h3>Your Details</h3>
                 <div class="detail-item">
                     <span class="detail-label">Role:</span>
@@ -235,20 +236,24 @@
             if (guest.rsvpStatus && guest.rsvpStatus !== 'Pending') {
                 document.querySelector('.rsvp-buttons').classList.add('hidden');
                 const message = guest.rsvpStatus === 'Attending' 
-                    ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
-                    : 'Thank you for letting us know. We will miss your presence at our celebration.';
-                
-                document.getElementById('responseMessage').innerHTML = `
-                    <div class="response-card">
-                        <h2>${guest.rsvpStatus === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
-                        <p>${message}</p>
+                    ? `<div class="response-card">
+                        <h2>See you there!</h2>
+                        <p>Thank you for accepting our invitation! We look forward to celebrating with you.</p>
+                        <p class="details-reminder">Don't forget to check our wedding details page for important information</p>
                         <p class="rsvp-timestamp">Response submitted on: ${formatDate(guest.timestamp)}</p>
-                        <button id="changeRsvp" class="rsvp-button">
-                            Change Response
-                            <span class="button-hover"></span>
-                        </button>
-                    </div>
-                `;
+                        <div class="response-buttons">
+                            <a href="index.html" class="wedding-details-btn">View Wedding Details</a>
+                            <button id="changeRsvp" class="rsvp-button">Change Response</button>
+                        </div>
+                      </div>`
+                    : `<div class="response-card">
+                        <h2>We will miss you</h2>
+                        <p>Thank you for letting us know. We will miss your presence at our celebration.</p>
+                        <p class="rsvp-timestamp">Response submitted on: ${formatDate(guest.timestamp)}</p>
+                        <button id="changeRsvp" class="rsvp-button">Change Response</button>
+                      </div>`;
+                
+                document.getElementById('responseMessage').innerHTML = message;
                 document.getElementById('responseMessage').style.display = 'block';
 
                 // Add event listener for changing RSVP
@@ -290,20 +295,24 @@
                 document.querySelector('.rsvp-buttons').classList.add('hidden');
                 
                 const message = status === 'Attending' 
-                    ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
-                    : 'Thank you for letting us know. We will miss your presence at our celebration.';
-                
-                document.getElementById('responseMessage').innerHTML = `
-                    <div class="response-card">
-                        <h2>${status === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
-                        <p>${message}</p>
+                    ? `<div class="response-card">
+                        <h2>See you there!</h2>
+                        <p>Thank you for accepting our invitation! We look forward to celebrating with you.</p>
+                        <p class="details-reminder">Don't forget to check our wedding details page for important information.</p>
                         <p class="rsvp-timestamp">Response submitted on: ${formatDate(new Date().toISOString())}</p>
-                        <button id="changeRsvp" class="rsvp-button">
-                            Change Response
-                            <span class="button-hover"></span>
-                        </button>
-                    </div>
-                `;
+                        <div class="response-buttons">
+                            <a href="index.html" class="wedding-details-btn">View Wedding Details</a>
+                            <button id="changeRsvp" class="rsvp-button">Change Response</button>
+                        </div>
+                      </div>`
+                    : `<div class="response-card">
+                        <h2>We will miss you</h2>
+                        <p>Thank you for letting us know. We will miss your presence at our celebration.</p>
+                        <p class="rsvp-timestamp">Response submitted on: ${formatDate(new Date().toISOString())}</p>
+                        <button id="changeRsvp" class="rsvp-button">Change Response</button>
+                      </div>`;
+                
+                document.getElementById('responseMessage').innerHTML = message;
                 document.getElementById('responseMessage').style.display = 'block';
 
                 // Add event listener for changing RSVP
