@@ -10,45 +10,52 @@
 <body>
     <div class="falling-leaves"></div>
     <div class="container">
-        <div id="accessCodeOverlay" class="password-overlay">
-            <div class="password-container">
-                <h2>RSVP</h2>
-                <p>Please enter your name and access code to proceed</p>
-                <div class="password-form">
-                    <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
-                    <input type="text" id="verifyAccessCode" placeholder="Enter your access code" class="verify-input">
-                    <div class="rsvp-buttons">
-                        <button id="acceptRsvp" class="rsvp-button accept">
-                            Accept with Pleasure
-                            <span class="button-hover"></span>
-                        </button>
-                        <button id="declineRsvp" class="rsvp-button decline">
-                            Decline with Regret
-                            <span class="button-hover"></span>
-                        </button>
-                    </div>
-                </div>
-                <div id="verifyError" class="password-error"></div>
-                <p class="note">Don't have an access code? Please contact the couple to receive your invitation link.</p>
-            </div>
-        </div>
-
-        <div id="rsvpContent" class="hidden">
+        <div class="card-container">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">Thank You</h1>
+                <h1 class="save-the-date">Join Us</h1>
+                <div class="message-card">
+                    <div class="message-content">
+                        As the autumn leaves dance in the gentle breeze, we invite you to be part of our special day
+                    </div>
+                </div>
             </header>
 
-            <div class="rsvp-info-message">
-                <p class="seat-info">We have reserved one (1) seat in your honor</p>
-                <p class="deadline-info">Kindly respond by <span class="highlight-date">March 15, 2025</span></p>
-                <p class="contact-info">For inquiries: <a href="https://www.facebook.com/jaycel.escalera" target="_blank">Jaycel</a> | <a href="https://www.facebook.com/murphyjohn.ong" target="_blank">Murphy</a></p>
+            <div id="accessCodeOverlay" class="password-overlay">
+                <div class="password-container">
+                    <h2>RSVP</h2>
+                    <p>Please enter your name and access code to proceed</p>
+                    <div class="password-form">
+                        <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
+                        <input type="text" id="verifyAccessCode" placeholder="Enter your access code" class="verify-input">
+                        <div class="rsvp-buttons">
+                            <button id="acceptRsvp" class="rsvp-button accept">
+                                Accept with Pleasure
+                                <span class="button-hover"></span>
+                            </button>
+                            <button id="declineRsvp" class="rsvp-button decline">
+                                Decline with Regret
+                                <span class="button-hover"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="verifyError" class="password-error"></div>
+                    <p class="note">Don't have an access code? Please contact the couple to receive your invitation link.</p>
+                </div>
             </div>
 
-            <div id="responseMessage" class="response-message"></div>
+            <div id="rsvpContent" class="hidden">
+                <div class="rsvp-info-message">
+                    <p class="seat-info">We have reserved one (1) seat in your honor</p>
+                    <p class="deadline-info">Kindly respond by <span class="highlight-date">March 15, 2025</span></p>
+                    <p class="contact-info">For inquiries: <a href="https://www.facebook.com/jaycel.escalera" target="_blank">Jaycel</a> | <a href="https://www.facebook.com/murphyjohn.ong" target="_blank">Murphy</a></p>
+                </div>
+
+                <div id="responseMessage" class="response-message"></div>
+            </div>
         </div>
     </div>
-    <script src="script.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get URL parameters
