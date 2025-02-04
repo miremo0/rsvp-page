@@ -98,20 +98,18 @@ function gisLoaded() {
 }
 
 function showError(message) {
+    console.error('❌ Error:', message);
     const loadingIndicator = document.getElementById('loadingIndicator');
     if (loadingIndicator) {
         loadingIndicator.textContent = message;
         loadingIndicator.classList.remove('hidden');
         loadingIndicator.style.color = '#B71C1C';
     }
-    // Also show error in the auth button area
-    const authButton = document.getElementById('authButton');
-    if (authButton) {
-        const errorDiv = document.createElement('div');
-        errorDiv.style.color = '#B71C1C';
-        errorDiv.style.marginTop = '10px';
-        errorDiv.textContent = message;
-        authButton.appendChild(errorDiv);
+    
+    // Also show error in a more visible way
+    const container = document.getElementById('guestCategories');
+    if (container) {
+        container.innerHTML = `<div class="error-message">${message}</div>`;
     }
 }
 
@@ -232,17 +230,27 @@ async function updateRSVP(row, status) {
 function processGuests(values) {
     console.log('🚀 processGuests called with values:', values);
     try {
-        const guests = values.map(row => {
-            console.log('Processing row:', row);
+        if (!values || !Array.isArray(values)) {
+            console.error('❌ Invalid values received:', values);
+            showError('Invalid data format received');
+            return;
+        }
+
+        const guests = values.map((row, index) => {
+            console.log(`Processing row ${index + 1}:`, row);
+            if (!row || !Array.isArray(row)) {
+                console.warn(`⚠️ Invalid row at index ${index}:`, row);
+                return null;
+            }
             return {
                 name: row[0] || '',        // Column A: Guest Name
                 role: row[1] || '',        // Column B: Role
-                category: row[2] || '',    // Column C: Category
+                category: row[2] || '',    // Column C: Category (Family, Principal, Entourage, Guest)
                 rsvpStatus: row[3] || 'Pending',  // Column D: RSVP Status
                 accessCode: row[4] || '',  // Column E: Access Code
                 timestamp: row[5] || ''    // Column F: Timestamp
             };
-        });
+        }).filter(guest => guest !== null && guest.name); // Remove invalid entries
         
         console.log('📋 Processed guests:', guests);
         
@@ -261,12 +269,47 @@ function processGuests(values) {
     }
 }
 
+// Helper function to create guest card HTML
+function createGuestCard(guest) {
+    if (!guest || !guest.name) {
+        console.warn('⚠️ Invalid guest data:', guest);
+        return '';
+    }
+
+    console.log('🎴 Creating card for guest:', guest.name);
+    
+    const statusClass = (guest.rsvpStatus || 'Pending').toLowerCase() === 'attending' 
+        ? 'status-attending' 
+        : 'status-pending';
+    
+    const cardHtml = `
+        <div class="guest-card">
+            <div class="guest-info">
+                <div class="guest-name">${guest.name || 'Unknown Guest'}</div>
+                <div class="guest-role">${guest.role || 'Guest'}</div>
+            </div>
+            <div class="guest-actions">
+                <div class="guest-status ${statusClass}">
+                    ${guest.rsvpStatus || 'Pending'}
+                </div>
+                <button class="generate-link-btn" data-guest="${guest.name}">
+                    Generate Link
+                </button>
+            </div>
+        </div>
+    `;
+    
+    console.log('✅ Card created for:', guest.name);
+    return cardHtml;
+}
+
 // Display guest list in the UI
 function displayGuestList(guests) {
     console.log('🚀 displayGuestList called with guests:', guests);
     const container = document.getElementById('guestCategories');
     if (!container) {
         console.error('❌ Container element not found');
+        showError('Error: Guest list container not found');
         return;
     }
     
@@ -274,8 +317,16 @@ function displayGuestList(guests) {
         console.log('🧹 Clearing existing content');
         container.innerHTML = '';
 
+        if (!guests || !Array.isArray(guests) || guests.length === 0) {
+            console.warn('⚠️ No guests data available');
+            container.innerHTML = '<div class="no-guests">No guests found in the list.</div>';
+            return;
+        }
+
         // Create HTML for Family category
-        const familyGuests = guests.filter(guest => guest.category.toLowerCase() === 'family');
+        const familyGuests = guests.filter(guest => 
+            guest.category && guest.category.toLowerCase() === 'family'
+        );
         console.log('👨‍👩‍👧‍👦 Family guests:', familyGuests);
         
         const brideFamily = familyGuests.filter(guest => 
@@ -405,29 +456,6 @@ function displayGuestList(guests) {
     } catch (err) {
         console.error('❌ Error displaying guest list:', err);
         showError('Error displaying guest list');
+        container.innerHTML = '<div class="error-message">Error displaying guest list. Please try refreshing the page.</div>';
     }
-}
-
-// Helper function to create guest card HTML
-function createGuestCard(guest) {
-    const statusClass = (guest.rsvpStatus || 'Pending').toLowerCase() === 'attending' 
-        ? 'status-attending' 
-        : 'status-pending';
-    
-    return `
-        <div class="guest-card">
-            <div class="guest-info">
-                <div class="guest-name">${guest.name}</div>
-                <div class="guest-role">${guest.role}</div>
-            </div>
-            <div class="guest-actions">
-                <div class="guest-status ${statusClass}">
-                    ${guest.rsvpStatus || 'Pending'}
-                </div>
-                <button class="generate-link-btn" data-guest="${guest.name}">
-                    Generate Link
-                </button>
-            </div>
-        </div>
-    `;
 } 
