@@ -105,7 +105,7 @@
     <div class="container">
         <div id="accessCodeOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>RSVP fb1</h2>
+                <h2>RSVP fb2</h2>
                 <p>Please enter your name and access code to proceed with your RSVP</p>
                 <div class="password-form">
                     <input type="text" id="verifyGuestName" placeholder="Enter your full name" class="verify-input">
@@ -218,11 +218,53 @@
 
             document.getElementById('accessCodeOverlay').classList.add('hidden');
             document.getElementById('rsvpContent').classList.remove('hidden');
-            document.querySelector('.rsvp-buttons').classList.remove('hidden');
 
             document.querySelector('.guest-details').classList.remove('hidden');
             document.getElementById('guestRole').textContent = guest.role || 'Guest';
             document.getElementById('guestCategory').textContent = guest.category || 'Guest';
+
+            // Check if guest has already RSVP'd
+            if (guest.rsvpStatus && guest.rsvpStatus !== 'Pending') {
+                document.querySelector('.rsvp-buttons').classList.add('hidden');
+                const message = guest.rsvpStatus === 'Attending' 
+                    ? 'Thank you for accepting our invitation! We look forward to celebrating with you.'
+                    : 'Thank you for letting us know. We will miss your presence at our celebration.';
+                
+                document.getElementById('responseMessage').innerHTML = `
+                    <div class="response-card">
+                        <h2>${guest.rsvpStatus === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
+                        <p>${message}</p>
+                        <p class="rsvp-timestamp">Response submitted on: ${formatDate(guest.timestamp)}</p>
+                        <button id="changeRsvp" class="rsvp-button">
+                            Change Response
+                            <span class="button-hover"></span>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('responseMessage').style.display = 'block';
+
+                // Add event listener for changing RSVP
+                document.getElementById('changeRsvp')?.addEventListener('click', function() {
+                    document.getElementById('responseMessage').style.display = 'none';
+                    document.querySelector('.rsvp-buttons').classList.remove('hidden');
+                });
+            } else {
+                document.querySelector('.rsvp-buttons').classList.remove('hidden');
+                document.getElementById('responseMessage').style.display = 'none';
+            }
+        }
+
+        // Helper function to format date
+        function formatDate(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
 
         function handleError(error) {
@@ -247,9 +289,20 @@
                     <div class="response-card">
                         <h2>${status === 'Attending' ? 'See you there!' : 'We will miss you'}</h2>
                         <p>${message}</p>
+                        <p class="rsvp-timestamp">Response submitted on: ${formatDate(new Date().toISOString())}</p>
+                        <button id="changeRsvp" class="rsvp-button">
+                            Change Response
+                            <span class="button-hover"></span>
+                        </button>
                     </div>
                 `;
                 document.getElementById('responseMessage').style.display = 'block';
+
+                // Add event listener for changing RSVP
+                document.getElementById('changeRsvp')?.addEventListener('click', function() {
+                    document.getElementById('responseMessage').style.display = 'none';
+                    document.querySelector('.rsvp-buttons').classList.remove('hidden');
+                });
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('verifyError').textContent = 'Error processing your RSVP. Please try again.';
