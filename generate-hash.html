@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Password Hash</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #hashOutput {
+            word-break: break-all;
+            background: #fff;
+            padding: 10px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Password Hash Generator</h2>
+        <input type="password" id="passwordInput" placeholder="Enter your desired password">
+        <button onclick="generateHash()">Generate Hash</button>
+        <div id="hashOutput"></div>
+    </div>
+
+    <script>
+        async function generateHash() {
+            const password = document.getElementById('passwordInput').value;
+            if (!password) {
+                alert('Please enter a password');
+                return;
+            }
+
+            try {
+                const msgUint8 = new TextEncoder().encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                document.getElementById('hashOutput').innerHTML = `
+                    <strong>Your password hash:</strong><br>
+                    ${hashHex}
+                `;
+            } catch (error) {
+                console.error('Error generating hash:', error);
+                alert('Error generating hash. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html> 

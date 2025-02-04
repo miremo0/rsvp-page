@@ -11,6 +11,7 @@
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
         import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+        import { createHash } from 'https://cdn.jsdelivr.net/npm/hash-wasm@4.9.0/+esm';
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -26,6 +27,31 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+
+        // Function to verify admin password
+        async function verifyAdminPassword(password) {
+            try {
+                const adminRef = ref(database, 'admin/password');
+                const snapshot = await get(adminRef);
+                
+                if (snapshot.exists()) {
+                    // Get the hashed password from Firebase
+                    const hashedPasswordFromDB = snapshot.val();
+                    
+                    // Hash the input password
+                    const hasher = await createHash('sha-256');
+                    const hashedInput = await hasher.update(password);
+                    const hash = hasher.digest('hex');
+                    
+                    // Compare the hashes
+                    return hash === hashedPasswordFromDB;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error verifying password:', error);
+                return false;
+            }
+        }
 
         // Function to load and display guest list
         async function loadGuestList() {
@@ -103,8 +129,46 @@
             guestCategories.innerHTML = '<div class="no-guests">No guests found</div>';
         }
 
+        // Function to generate invitation link
+        function generateInvitationLink(guestName, accessCode) {
+            const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
+            const link = `${baseUrl}?guest=${encodeURIComponent(guestName)}&code=${encodeURIComponent(accessCode)}`;
+            
+            document.getElementById('guestNameSpan').textContent = guestName;
+            document.getElementById('invitationLink').value = link;
+            document.getElementById('accessCode').textContent = accessCode;
+            document.getElementById('linkModal').classList.remove('hidden');
+        }
+
+        // Function to copy link
+        function copyLink() {
+            const linkInput = document.getElementById('invitationLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const copyBtn = document.getElementById('copyLink');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+                copyBtn.textContent = 'Copy';
+            }, 2000);
+        }
+
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('linkModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('linkModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
         // Make functions available globally
         window.loadGuestList = loadGuestList;
+        window.verifyAdminPassword = verifyAdminPassword;
     </script>
 </head>
 <body>
@@ -112,7 +176,7 @@
     <div class="container">
         <div id="passwordOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>Private Guest List fb4</h2>
+                <h2>Private Guest List</h2>
                 <p>Please enter the password to view the guest list</p>
                 <div class="password-form">
                     <input type="password" id="guestListPassword" placeholder="Enter password">
@@ -125,7 +189,7 @@
         <div id="mainContent" class="hidden">
             <header class="header">
                 <a href="index.html" class="back-home">← Back to Home</a>
-                <h1 class="page-title">Guest List</h1>
+                <h1 class="page-title">Guest List fb5</h1>
             </header>
 
             <main class="guest-list-container">
@@ -161,11 +225,6 @@
                     </div>
                 </div>
             </main>
-
-            <footer>
-                <p class="footer-note">Please RSVP to confirm your attendance</p>
-                <a href="rsvp.html" class="rsvp-link">RSVP Now</a>
-            </footer>
         </div>
     </div>
     <script>
@@ -181,13 +240,28 @@
         // Password check
         document.getElementById('submitPassword').addEventListener('click', async function() {
             const password = document.getElementById('guestListPassword').value;
-            if (password === 'Morgan0929!') {  // Your existing password
-                sessionStorage.setItem('isAuthenticated', 'true');
-                document.getElementById('passwordOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-                loadGuestList();
-            } else {
-                document.getElementById('passwordError').textContent = 'Incorrect password';
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const passwordError = document.getElementById('passwordError');
+            
+            try {
+                loadingIndicator.classList.remove('hidden');
+                passwordError.textContent = '';
+                
+                const isValid = await verifyAdminPassword(password);
+                
+                if (isValid) {
+                    sessionStorage.setItem('isAuthenticated', 'true');
+                    document.getElementById('passwordOverlay').classList.add('hidden');
+                    document.getElementById('mainContent').classList.remove('hidden');
+                    loadGuestList();
+                } else {
+                    passwordError.textContent = 'Incorrect password';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                passwordError.textContent = 'Error verifying password. Please try again.';
+            } finally {
+                loadingIndicator.classList.add('hidden');
             }
         });
 
