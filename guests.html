@@ -4,18 +4,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest List - Our Autumn Wedding</title>
-    <link rel="stylesheet" href="/rsvp-page/style.css">
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:wght@400;600&display=swap" rel="stylesheet">
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-    <script src="sheets.js"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-Owb-RYgi0khn4GW0qBxcZD2zc6cP6Gk",
+            authDomain: "mywed-5a5b9.firebaseapp.com",
+            databaseURL: "https://mywed-5a5b9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mywed-5a5b9",
+            storageBucket: "mywed-5a5b9.firebasestorage.app",
+            messagingSenderId: "537064292333",
+            appId: "1:537064292333:web:c18ee6c8cbc08cf2b931e4"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Function to load and display guest list
+        async function loadGuestList() {
+            try {
+                const guestsRef = ref(database, 'guests');
+                onValue(guestsRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const guests = snapshot.val();
+                        displayGuestList(guests);
+                    } else {
+                        console.log('No guests found');
+                        displayNoGuests();
+                    }
+                    document.getElementById('loadingIndicator').classList.add('hidden');
+                });
+            } catch (error) {
+                console.error('Error loading guest list:', error);
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        }
+
+        // Function to display guest list
+        function displayGuestList(guests) {
+            const guestCategories = document.getElementById('guestCategories');
+            guestCategories.innerHTML = '';
+
+            // Group guests by category
+            const categories = {};
+            Object.values(guests).forEach(guest => {
+                const category = guest.category || 'Other';
+                if (!categories[category]) {
+                    categories[category] = [];
+                }
+                categories[category].push(guest);
+            });
+
+            // Sort categories
+            const sortedCategories = Object.keys(categories).sort((a, b) => {
+                const order = ['Family', 'Principal Sponsors', 'Secondary Sponsors', 'Entourage', 'Friends', 'Other'];
+                return order.indexOf(a) - order.indexOf(b);
+            });
+
+            // Create category sections
+            sortedCategories.forEach(category => {
+                const categoryGuests = categories[category];
+                const categorySection = document.createElement('div');
+                categorySection.className = 'guest-category';
+                categorySection.innerHTML = `
+                    <h2 class="category-title">${category}</h2>
+                    <div class="guest-grid">
+                        ${categoryGuests.map(guest => `
+                            <div class="guest-card">
+                                <div class="guest-info">
+                                    <div class="guest-name">${guest.name}</div>
+                                    <div class="guest-role">${guest.role || ''}</div>
+                                </div>
+                                <div class="guest-status ${guest.rsvpStatus === 'Attending' ? 'status-attending' : 'status-pending'}">
+                                    ${guest.rsvpStatus || 'Pending'}
+                                </div>
+                                <div class="guest-actions">
+                                    <button class="generate-link-btn" onclick="generateInvitationLink('${guest.name}', '${guest.accessCode}')">
+                                        Get Link
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                guestCategories.appendChild(categorySection);
+            });
+        }
+
+        function displayNoGuests() {
+            const guestCategories = document.getElementById('guestCategories');
+            guestCategories.innerHTML = '<div class="no-guests">No guests found</div>';
+        }
+
+        // Make functions available globally
+        window.loadGuestList = loadGuestList;
+    </script>
 </head>
 <body>
     <div class="falling-leaves"></div>
     <div class="container">
         <div id="passwordOverlay" class="password-overlay">
             <div class="password-container">
-                <h2>Private Guest List</h2>
+                <h2>Private Guest List fb4</h2>
                 <p>Please enter the password to view the guest list</p>
                 <div class="password-form">
                     <input type="password" id="guestListPassword" placeholder="Enter password">
@@ -33,13 +130,8 @@
 
             <main class="guest-list-container">
                 <div class="guest-list-header">
-                    <div id="loadingIndicator" class="loading-indicator hidden">
+                    <div id="loadingIndicator" class="loading-indicator">
                         Loading guest list...
-                    </div>
-                    <div id="authButton" class="auth-button-container hidden">
-                        <button onclick="handleAuthClick()" class="auth-button">
-                            Connect to Guest List
-                        </button>
                     </div>
                     <div class="status-legend">
                         <span class="status-dot attending"></span> Attending
@@ -53,13 +145,13 @@
 
                 <div id="linkModal" class="modal hidden">
                     <div class="modal-content">
-                        <span class="close-modal">&times;</span>
+                        <span class="close-modal" onclick="closeModal()">&times;</span>
                         <h2>Invitation Link</h2>
                         <div class="invitation-details">
                             <p>Share this link with <span id="guestNameSpan"></span>:</p>
                             <div class="link-container">
                                 <input type="text" id="invitationLink" readonly>
-                                <button id="copyLink" class="copy-btn">Copy</button>
+                                <button id="copyLink" class="copy-btn" onclick="copyLink()">Copy</button>
                             </div>
                             <div class="access-code">
                                 <p>Access Code: <span id="accessCode"></span></p>
@@ -82,19 +174,18 @@
             if (sessionStorage.getItem('isAuthenticated')) {
                 document.getElementById('passwordOverlay').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
-                document.getElementById('authButton').classList.remove('hidden');
+                loadGuestList();
             }
         });
 
-        // Modified password check to include Google Sheets authorization
+        // Password check
         document.getElementById('submitPassword').addEventListener('click', async function() {
             const password = document.getElementById('guestListPassword').value;
             if (password === 'Morgan0929!') {  // Your existing password
-                // Store authentication state
                 sessionStorage.setItem('isAuthenticated', 'true');
                 document.getElementById('passwordOverlay').classList.add('hidden');
                 document.getElementById('mainContent').classList.remove('hidden');
-                document.getElementById('authButton').classList.remove('hidden');
+                loadGuestList();
             } else {
                 document.getElementById('passwordError').textContent = 'Incorrect password';
             }
@@ -106,6 +197,43 @@
                 document.getElementById('submitPassword').click();
             }
         });
+
+        // Function to generate invitation link
+        function generateInvitationLink(guestName, accessCode) {
+            const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
+            const link = `${baseUrl}?guest=${encodeURIComponent(guestName)}&code=${encodeURIComponent(accessCode)}`;
+            
+            document.getElementById('guestNameSpan').textContent = guestName;
+            document.getElementById('invitationLink').value = link;
+            document.getElementById('accessCode').textContent = accessCode;
+            document.getElementById('linkModal').classList.remove('hidden');
+        }
+
+        // Function to copy link
+        function copyLink() {
+            const linkInput = document.getElementById('invitationLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const copyBtn = document.getElementById('copyLink');
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+                copyBtn.textContent = 'Copy';
+            }, 2000);
+        }
+
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('linkModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('linkModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 </html> 
