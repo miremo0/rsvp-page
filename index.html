@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="assets/wedding-icon.svg">
     <link rel="alternate icon" type="image/png" href="assets/wedding-icon.png">
@@ -24,13 +24,78 @@
         <header class="header">
             <div class="save-the-date">Our Autumn Wedding</div>
         </header>
-        
+    
         <main class="main-content">
             <div class="names" id="coupleNames"></div>
             <div class="date-venue">
                 <div class="wedding-date" id="weddingDate"></div>
                 <div class="venue" id="venue"></div>
             </div>
+            
+            <section class="main-slideshow">
+                <div class="main-slideshow-container">
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-706764.jpg" alt="Couple sitting in autumn field">
+                        <div class="slide-caption">Our Autumn Love Story</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-01140.jpg" alt="Couple in autumn setting">
+                        <div class="slide-caption">Forever & Always</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-706250.jpg" alt="Couple in romantic pose">
+                        <div class="slide-caption">Two Hearts, One Love</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-00568.jpg" alt="Couple embracing">
+                        <div class="slide-caption">A Love to Remember</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-01099.jpg" alt="Couple in nature">
+                        <div class="slide-caption">Together Forever</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-706502.jpg" alt="Couple in autumn setting">
+                        <div class="slide-caption">Endless Love</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-706610.jpg" alt="Couple in romantic moment">
+                        <div class="slide-caption">Written in the Stars</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-00593.jpg" alt="Couple in love">
+                        <div class="slide-caption">A Beautiful Journey</div>
+                    </div>
+                    
+                    <div class="slide fade">
+                        <img src="assets/slideshow/JMEPS-706719.jpg" alt="Couple in autumn colors">
+                        <div class="slide-caption">Autumn Romance</div>
+                    </div>
+                    
+                    <!-- Navigation arrows -->
+                    <a class="prev" onclick="changeMainSlide(-1)">&#10094;</a>
+                    <a class="next" onclick="changeMainSlide(1)">&#10095;</a>
+                </div>
+                
+                <div class="slideshow-dots">
+                    <span class="dot" onclick="currentMainSlide(1)"></span>
+                    <span class="dot" onclick="currentMainSlide(2)"></span>
+                    <span class="dot" onclick="currentMainSlide(3)"></span>
+                    <span class="dot" onclick="currentMainSlide(4)"></span>
+                    <span class="dot" onclick="currentMainSlide(5)"></span>
+                    <span class="dot" onclick="currentMainSlide(6)"></span>
+                    <span class="dot" onclick="currentMainSlide(7)"></span>
+                    <span class="dot" onclick="currentMainSlide(8)"></span>
+                    <span class="dot" onclick="currentMainSlide(9)"></span>
+                </div>
+            </section>
             
             <div class="message" id="message"></div>
 
