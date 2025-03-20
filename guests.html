@@ -397,8 +397,9 @@
                     console.log('✅ Access code updated successfully');
                 }
 
-                const baseUrl = window.location.origin + window.location.pathname.replace('guests.html', 'rsvp.html');
-                const link = `${baseUrl}?guest=${encodeURIComponent(guest.name)}&code=${encodeURIComponent(finalAccessCode)}`;
+                const baseUrl = window.location.origin;
+                // Create the correct RSVP link regardless of current path format
+                const link = `${baseUrl}/rsvp.html?guest=${encodeURIComponent(guest.name)}&code=${encodeURIComponent(finalAccessCode)}`;
                 
                 // Generate personalized message
                 const message = `Hi ${guest.name}, my ${guest.role}! 🍂
